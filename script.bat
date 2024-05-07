@@ -11,14 +11,14 @@ REM Compilation des fichiers Java dans des packages
         javac -cp "%lib%\*;" -sourcepath %src% -d %temp% "%%i"
     )
 
-REM Convertir le répertoire temp en .war
-    jar -cvf %nom_projet%.war -C %temp% .
+REM Convertir le répertoire temp en .jar
+    jar -cvf %nom_projet%.jar -C %temp% .
 
-REM Copie du fichier war vers tomcat/webapps
-    copy /y %nom_projet%.war C:\Apache_tomcat\webapps
+REM Copie du fichier jar vers lib
+    copy /y %nom_projet%.jar %lib%
 
-REM Supprimer le fichier WAR temporaire
-    del %nom_projet%.war
+REM Supprimer le fichier jar temporaire
+    del %nom_projet%.jar
 
 
 
