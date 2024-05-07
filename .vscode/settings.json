@@ -1,0 +1,6 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "e:\\web-dyn\\EventReserve\\lib\\servlet-api.jar"
+    ]
+}
