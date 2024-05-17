@@ -33,7 +33,7 @@ public class FrontController extends HttpServlet {
             out.println("<title>FrontController</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet FrontController</h1>");
+           
             out.println("<p>URL: " + request.getRequestURL() + "</p>");
             if (controllerList.size() != 0) {
                 for (String controller : controllerList) {
@@ -49,7 +49,7 @@ public class FrontController extends HttpServlet {
         controllerList = new ArrayList<>();
         try {
             ServletContext context = getServletContext();
-            String packageName = context.getInitParameter("Controller");
+            String packageName = context.getInitParameter("controllers");
 
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             Enumeration<URL> resources = classLoader.getResources(packageName.replace('.', '/'));
