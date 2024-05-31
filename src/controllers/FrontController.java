@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import annotation.AnnotationController;
-import annotation.MethodAnnotation;
+import annotation.Get;
 
 import java.util.List;
 import java.util.Map;
@@ -116,9 +116,9 @@ public class FrontController extends HttpServlet {
                         controllerList.add(className);
                         Method[] methods=clazz.getDeclaredMethods();
                         for (Method method :methods) {
-                            if(method.isAnnotationPresent(MethodAnnotation.class)){
-                                MethodAnnotation methodAnnotation=method.getAnnotation(MethodAnnotation.class);
-                                String urlName=request.getRequestURL().toString()+""+methodAnnotation.url();
+                            if(method.isAnnotationPresent(Get.class)){
+                                Get getAnnotation=method.getAnnotation(Get.class);
+                                String urlName=request.getRequestURL().toString()+""+getAnnotation.url();
                                 url.put(urlName,new Mapping(className,method.getName()));
                             }
                         }
