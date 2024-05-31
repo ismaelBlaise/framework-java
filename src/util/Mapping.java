@@ -1,4 +1,4 @@
-package controllers;
+package util;
 
 public class Mapping {
     String controlleur;
