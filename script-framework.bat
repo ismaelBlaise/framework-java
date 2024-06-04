@@ -1,7 +1,7 @@
 @echo off
 
 REM Déclaration des variables
-    set nom_projet=Sprint0-2391
+    set nom_projet=framework
     set temp=C:\Users\ismab\OneDrive\Documents\GitHub\test\%nom_projet%
     set lib=C:\Users\ismab\OneDrive\Documents\GitHub\test\lib
     set lib-framework=C:\Users\ismab\OneDrive\Documents\GitHub\test\lib
