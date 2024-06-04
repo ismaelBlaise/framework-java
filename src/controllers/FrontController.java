@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import util.Mapping;
+import util.ModelAndView;
 import annotation.AnnotationController;
 import annotation.Get;
 
@@ -62,7 +63,18 @@ public class FrontController extends HttpServlet {
                 Class<?> clazz = Class.forName(map.getControlleur());
                 Method meth=clazz.getDeclaredMethod(map.getMethode(),null);
                 Object obj=clazz.getDeclaredConstructor().newInstance();
-                out.println("<br>Invocation Method :"+meth.invoke(obj,null));
+                Object invoke=meth.invoke(obj,null);
+                if(invoke instanceof String){
+                    out.println("<br>Invocation Method :"+invoke);
+                }
+                else if(invoke instanceof ModelAndView){
+                    ModelAndView modelAndView=(ModelAndView) invoke;
+                    for (String string : modelAndView.getData().keySet()) {
+                        request.setAttribute(string, modelAndView.getData().get(string));
+                    }
+
+                    request.getRequestDispatcher(modelAndView.getUrl()).forward(request, response);
+                }
 
             }
             else{
