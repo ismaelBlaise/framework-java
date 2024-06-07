@@ -91,6 +91,7 @@ public class FrontController extends HttpServlet {
         try {
             ServletContext context = getServletContext();
             String packageName = context.getInitParameter("package-to-scan");
+            
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             Enumeration<URL> resources = classLoader.getResources(packageName.replace('.', '/'));
 
