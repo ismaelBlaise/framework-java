@@ -2,7 +2,9 @@ package controllers;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -10,8 +12,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import util.Mapping;
 import util.ModelAndView;
-import annotation.AnnotationController;
+import annotation.Controller;
 import annotation.Get;
+import annotation.Post;
+import annotation.RequestParam;
 
 import java.util.List;
 import java.util.Map;
@@ -31,16 +35,24 @@ public class FrontController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
 
-        try (PrintWriter out = response.getWriter()) {
+        synchronized (this) {
             if (!initialized) {
                 try {
                     initControllers(request);
+                    initialized = true;
                 } catch (Exception e) {
-                    out.println("Initialization error: " + e.getMessage());
-                   
+                    try (PrintWriter out = response.getWriter()) {
+                        out.println("Initialization error: " + e.getMessage());
+                    }
                     return;
                 }
             }
+        }
+
+        try (PrintWriter out = response.getWriter()) {
+            String requestURL = request.getRequestURL().toString();
+            String requestMethod = request.getMethod();
+            String baseUrl = getBaseUrl(request);
 
             out.println("<!DOCTYPE html>");
             out.println("<html>");
@@ -48,26 +60,34 @@ public class FrontController extends HttpServlet {
             out.println("<title>FrontController</title>");
             out.println("</head>");
             out.println("<body>");
-
-            String requestURL = request.getRequestURL().toString();
             out.println("<p><b>URL:</b> " + requestURL + "</p>");
-
-            if (!controllerList.isEmpty()) {
-                for (String controller : controllerList) {
-                    out.println("<p>Controller: " + controller + "</p>");
-                }
+            out.println("<p><b>Method:</b> " + requestMethod + "</p>");
+            
+            out.println("<p><b>Available Controllers:</b></p>");
+            out.println("<ul>");
+            for (String controller : controllerList) {
+                out.println("<li>" + controller + "</li>");
             }
+            out.println("</ul>");
 
-            if (urlMappings.containsKey(requestURL)) {
-                Mapping map = urlMappings.get(requestURL);
+            String mappedURL = requestURL.replace(baseUrl, "");
+            if (urlMappings.containsKey(mappedURL)) {
+                Mapping map = urlMappings.get(mappedURL);
                 out.println("<b>Controller Class:</b> " + map.getControlleur() + "<br>");
                 out.println("<b>Associated Method:</b> " + map.getMethode() + "<br>");
 
                 try {
                     Class<?> clazz = Class.forName(map.getControlleur());
-                    Method method = clazz.getDeclaredMethod(map.getMethode());
+                    Method[] meth = clazz.getDeclaredMethods();
+                    Method method=null;
+
+                    for (Method method1 : meth) {
+                        if(method1.getName().compareTo(map.getMethode())==0){
+                            method=method1;
+                        }
+                    }
                     Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
-                    Object result = method.invoke(controllerInstance);
+                    Object result = method.invoke(controllerInstance, getMethodParameters(method, request));
 
                     if (result instanceof String) {
                         out.println("<br>Method Invocation Result: " + result);
@@ -81,7 +101,7 @@ public class FrontController extends HttpServlet {
                     }
                 } catch (Exception e) {
                     out.println("Error invoking method: " + e.getMessage());
-                   
+                    e.printStackTrace();
                 }
             } else {
                 out.println("<p>No associated method found for this URL.</p>");
@@ -108,9 +128,9 @@ public class FrontController extends HttpServlet {
             URL resource = resources.nextElement();
             if (resource.getProtocol().equals("file")) {
                 File directory = new File(resource.toURI());
-                if (directory.exists() && directory.isDirectory()) {
-                    packageEmpty = packageEmpty && directory.list().length == 0;
-                    scanControllers(request, directory, packageName);
+                if (directory.exists() && isDirectoryNotEmpty(directory)) {
+                    packageEmpty = false;
+                    scanControllers(directory, packageName);
                 }
             }
         }
@@ -122,11 +142,14 @@ public class FrontController extends HttpServlet {
         if (controllerList.isEmpty()) {
             throw new Exception("No classes annotated with @AnnotationController found in package " + packageName);
         }
-
-        initialized = true;
     }
 
-    private void scanControllers(HttpServletRequest request, File directory, String packageName) throws Exception {
+    private boolean isDirectoryNotEmpty(File directory) {
+        File[] files = directory.listFiles();
+        return files != null && files.length > 0;
+    }
+
+    private void scanControllers(File directory, String packageName) throws Exception {
         File[] files = directory.listFiles();
         if (files == null) {
             return;
@@ -134,17 +157,17 @@ public class FrontController extends HttpServlet {
 
         for (File file : files) {
             if (file.isDirectory()) {
-                scanControllers(request, file, packageName + "." + file.getName());
+                scanControllers(file, packageName + "." + file.getName());
             } else if (file.getName().endsWith(".class")) {
                 String className = packageName + '.' + file.getName().substring(0, file.getName().length() - 6);
                 try {
                     Class<?> clazz = Class.forName(className);
-                    if (clazz.isAnnotationPresent(AnnotationController.class)) {
+                    if (clazz.isAnnotationPresent(Controller.class)) {
                         controllerList.add(className);
                         Method[] methods = clazz.getDeclaredMethods();
                         for (Method method : methods) {
-                            if (method.isAnnotationPresent(Get.class)) {
-                                validateAndRegisterMethod(request, clazz, method);
+                            if (method.isAnnotationPresent(Get.class) || method.isAnnotationPresent(Post.class)) {
+                                validateAndRegisterMethod(clazz, method);
                             }
                         }
                     }
@@ -155,18 +178,72 @@ public class FrontController extends HttpServlet {
         }
     }
 
-    private void validateAndRegisterMethod(HttpServletRequest request, Class<?> clazz, Method method) throws Exception {
+    private void validateAndRegisterMethod(Class<?> clazz, Method method) throws Exception {
         if (method.getReturnType().equals(String.class) || method.getReturnType().equals(ModelAndView.class)) {
-            Get getAnnotation = method.getAnnotation(Get.class);
-            String urlName = request.getRequestURL().toString() + getAnnotation.url();
-            if (urlMappings.containsKey(urlName)) {
+            String urlName = null;
+            if (method.isAnnotationPresent(Get.class)) {
+                Get getAnnotation = method.getAnnotation(Get.class);
+                urlName = getAnnotation.url();
+            } else if (method.isAnnotationPresent(Post.class)) {
+                Post postAnnotation = method.getAnnotation(Post.class);
+                urlName = postAnnotation.url();
+            }
+
+            if (urlName != null && urlMappings.containsKey(urlName)) {
                 throw new Exception("URL " + urlName + " is already defined.");
-            } else {
+            } else if (urlName != null) {
                 urlMappings.put(urlName, new Mapping(clazz.getName(), method.getName()));
             }
         } else {
             throw new Exception("Method return type must be String or ModelAndView.");
         }
+    }
+    
+
+    private Object[] getMethodParameters(Method method, HttpServletRequest request) throws Exception {
+        Parameter[] parameters = method.getParameters();
+        Object[] paramValues = new Object[parameters.length];
+
+        for (int i = 0; i < parameters.length; i++) {
+            RequestParam requestParam = parameters[i].getAnnotation(RequestParam.class);
+            if (requestParam != null) {
+                String paramName = requestParam.value();
+                String paramValue = request.getParameter(paramName);
+                paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
+            }
+        }
+
+        return paramValues;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private Object convertParameterType(String paramValue, Class<?> paramType) throws Exception {
+        if (paramValue == null) {
+            return null;
+        }
+
+        if (paramType == String.class) {
+            return paramValue;
+        } else if (paramType == int.class || paramType == Integer.class) {
+            return Integer.parseInt(paramValue);
+        } else if (paramType == long.class || paramType == Long.class) {
+            return Long.parseLong(paramValue);
+        } else if (paramType == double.class || paramType == Double.class) {
+            return Double.parseDouble(paramValue);
+        } else if (paramType == boolean.class || paramType == Boolean.class) {
+            return Boolean.parseBoolean(paramValue);
+        } else if (paramType.isEnum()) {
+            return Enum.valueOf((Class<Enum>) paramType, paramValue);
+        } else {
+            Constructor<?> constructor = paramType.getConstructor();
+            return constructor.newInstance(paramValue);
+        }
+    }
+
+    private String getBaseUrl(HttpServletRequest request) {
+        String requestURL = request.getRequestURL().toString();
+        String requestURI = request.getRequestURI();
+        return requestURL.substring(0, requestURL.length() - requestURI.length()) + request.getContextPath() + "/";
     }
 
     @Override
