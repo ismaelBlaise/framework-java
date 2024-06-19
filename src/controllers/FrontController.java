@@ -14,8 +14,9 @@ import util.Mapping;
 import util.ModelAndView;
 import annotation.Controller;
 import annotation.Get;
+import annotation.ObjectParam;
 import annotation.Post;
-import annotation.RequestParam;
+import annotation.Param;
 
 import java.util.List;
 import java.util.Map;
@@ -23,8 +24,13 @@ import java.util.ArrayList;
 import jakarta.servlet.ServletContext;
 import java.io.File;
 import java.net.URL;
+import java.sql.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import com.thoughtworks.paranamer.AdaptiveParanamer;
+import com.thoughtworks.paranamer.Paranamer;
+
+
 
 public class FrontController extends HttpServlet {
     private List<String> controllerList = new ArrayList<>();
@@ -205,12 +211,29 @@ public class FrontController extends HttpServlet {
         Object[] paramValues = new Object[parameters.length];
 
         for (int i = 0; i < parameters.length; i++) {
-            RequestParam requestParam = parameters[i].getAnnotation(RequestParam.class);
-            if (requestParam != null) {
-                String paramName = requestParam.value();
+            
+            Param requestParam = parameters[i].getAnnotation(Param.class);
+            ObjectParam objectParam=parameters[i].getAnnotation(ObjectParam.class);
+            if (requestParam != null && objectParam==null) {
+                String paramName = requestParam.name();
                 String paramValue = request.getParameter(paramName);
                 paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
             }
+            else if(requestParam == null && objectParam!=null){
+                
+            }
+            else if(requestParam == null && objectParam==null){
+                Paranamer paranamer=new AdaptiveParanamer();
+                String[] paramNames= paranamer.lookupParameterNames(method);
+                String paramName=paramNames[i];
+                System.out.println(paramName);
+                String paramValue=request.getParameter(paramName);
+                paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
+            }
+            
+
+
+            
         }
 
         return paramValues;
@@ -232,6 +255,8 @@ public class FrontController extends HttpServlet {
             return Double.parseDouble(paramValue);
         } else if (paramType == boolean.class || paramType == Boolean.class) {
             return Boolean.parseBoolean(paramValue);
+        }else if (paramType == Date.class || paramType == Date.class) {
+            return Date.valueOf(paramValue);
         } else if (paramType.isEnum()) {
             return Enum.valueOf((Class<Enum>) paramType, paramValue);
         } else {
