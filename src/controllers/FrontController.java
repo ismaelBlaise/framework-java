@@ -3,6 +3,7 @@ package controllers;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
@@ -13,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import util.Mapping;
 import util.ModelAndView;
 import annotation.Controller;
+import annotation.FieldAnnotation;
 import annotation.Get;
 import annotation.ObjectParam;
 import annotation.Post;
@@ -220,6 +222,15 @@ public class FrontController extends HttpServlet {
                 paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
             }
             else if(requestParam == null && objectParam!=null){
+                String paramName = objectParam.name();
+                Field[] fields=parameters[i].getClass().getDeclaredFields();
+                for(Field field : fields){
+                    // if(field.isAnnotationPresent(FieldAnnotation.class)){
+                    //     String paramValue = request.getParameter(paramName.to+"."+);
+                    //     paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
+                    // }
+                }
+
                 
             }
             else if(requestParam == null && objectParam==null){
