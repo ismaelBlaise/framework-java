@@ -16,7 +16,7 @@ import util.ModelAndView;
 import annotation.Controller;
 import annotation.FieldAnnotation;
 import annotation.Get;
-import annotation.ObjectParam;
+import annotation.ParamObject;
 import annotation.Post;
 import annotation.Param;
 
@@ -211,44 +211,51 @@ public class FrontController extends HttpServlet {
     private Object[] getMethodParameters(Method method, HttpServletRequest request) throws Exception {
         Parameter[] parameters = method.getParameters();
         Object[] paramValues = new Object[parameters.length];
-
+    
         for (int i = 0; i < parameters.length; i++) {
-            
             Param requestParam = parameters[i].getAnnotation(Param.class);
-            ObjectParam objectParam=parameters[i].getAnnotation(ObjectParam.class);
-            if (requestParam != null && objectParam==null) {
+            ParamObject objectParam = parameters[i].getAnnotation(ParamObject.class);
+    
+            if (requestParam != null) {
+                
                 String paramName = requestParam.name();
                 String paramValue = request.getParameter(paramName);
                 paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
-            }
-            else if(requestParam == null && objectParam!=null){
-                String paramName = objectParam.name();
-                Field[] fields=parameters[i].getClass().getDeclaredFields();
-                for(Field field : fields){
-                    // if(field.isAnnotationPresent(FieldAnnotation.class)){
-                    //     String paramValue = request.getParameter(paramName.to+"."+);
-                    //     paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
-                    // }
+            } else if (objectParam != null) {
+              
+                String paramName = parameters[i].getType().getName();
+               
+                Class<?> paramType = parameters[i].getType();
+                Object paramObject = paramType.getDeclaredConstructor().newInstance();
+    
+                Field[] fields = paramType.getDeclaredFields();
+                for (Field field : fields) {
+                    if (field.isAnnotationPresent(FieldAnnotation.class)) {
+                        String fieldValue = request.getParameter(paramName.toLowerCase() + "." + field.getAnnotation(FieldAnnotation.class).name().toLowerCase());
+                        field.setAccessible(true); 
+                        field.set(paramObject, convertParameterType(fieldValue, field.getType()));
+                    } else {
+                        String fieldValue = request.getParameter(paramName.toLowerCase() + "." + field.getName().toLowerCase());
+                        field.setAccessible(true); 
+                        field.set(paramObject, convertParameterType(fieldValue, field.getType()));
+                    }
                 }
-
+    
+                paramValues[i] = paramObject;
+            } else {
                 
-            }
-            else if(requestParam == null && objectParam==null){
-                Paranamer paranamer=new AdaptiveParanamer();
-                String[] paramNames= paranamer.lookupParameterNames(method);
-                String paramName=paramNames[i];
+                Paranamer paranamer = new AdaptiveParanamer();
+                String[] paramNames = paranamer.lookupParameterNames(method);
+                String paramName = paramNames[i];
                 System.out.println(paramName);
-                String paramValue=request.getParameter(paramName);
+                String paramValue = request.getParameter(paramName);
                 paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
             }
-            
-
-
-            
         }
-
+    
         return paramValues;
     }
+    
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private Object convertParameterType(String paramValue, Class<?> paramType) throws Exception {
