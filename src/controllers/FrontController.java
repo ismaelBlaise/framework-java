@@ -29,8 +29,6 @@ import java.net.URL;
 import java.sql.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
-import com.thoughtworks.paranamer.AdaptiveParanamer;
-import com.thoughtworks.paranamer.Paranamer;
 
 
 
@@ -215,42 +213,61 @@ public class FrontController extends HttpServlet {
         for (int i = 0; i < parameters.length; i++) {
             Param requestParam = parameters[i].getAnnotation(Param.class);
             ParamObject objectParam = parameters[i].getAnnotation(ParamObject.class);
-    
+
             if (requestParam != null) {
-                
+                 
                 String paramName = requestParam.name();
                 String paramValue = request.getParameter(paramName);
                 paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
             } else if (objectParam != null) {
-              
-                String paramName = parameters[i].getType().getName();
-               
+                
                 Class<?> paramType = parameters[i].getType();
                 Object paramObject = paramType.getDeclaredConstructor().newInstance();
-    
-                Field[] fields = paramType.getDeclaredFields();
-                for (Field field : fields) {
-                    if (field.isAnnotationPresent(FieldAnnotation.class)) {
-                        String fieldValue = request.getParameter(paramName.toLowerCase() + "." + field.getAnnotation(FieldAnnotation.class).name().toLowerCase());
-                        field.setAccessible(true); 
-                        field.set(paramObject, convertParameterType(fieldValue, field.getType()));
-                    } else {
-                        String fieldValue = request.getParameter(paramName.toLowerCase() + "." + field.getName().toLowerCase());
-                        field.setAccessible(true); 
-                        field.set(paramObject, convertParameterType(fieldValue, field.getType()));
+
+                 
+                Map<String, String[]> parameterMap = request.getParameterMap();
+                for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                    
+                    String fullParamName = entry.getKey();
+                    String[] paramNameParts = fullParamName.split("\\.");
+                    if (paramNameParts.length < 2) continue;
+
+                    String objectName = paramNameParts[0];
+                    String fieldName = paramNameParts[1];
+
+                    
+                    if (objectName.equalsIgnoreCase(objectParam.name())) {
+                        Field[] fields = paramType.getDeclaredFields();
+                        for (Field field : fields) {
+                            String fieldValue = null;
+                            
+                            FieldAnnotation fieldAnnotation = field.getAnnotation(FieldAnnotation.class);
+                            if (fieldAnnotation != null && fieldAnnotation.name().equalsIgnoreCase(fieldName)) {
+                                
+                                fieldValue = request.getParameter(fullParamName);
+                            } else if (field.getName().equalsIgnoreCase(fieldName)) {
+                                fieldValue = request.getParameter(fullParamName);
+                            }
+
+                            if (fieldValue != null) {
+                                field.setAccessible(true);
+                                field.set(paramObject, convertParameterType(fieldValue, field.getType()));
+                            }
+                        }
                     }
                 }
-    
+
                 paramValues[i] = paramObject;
-            } else {
-                
-                Paranamer paranamer = new AdaptiveParanamer();
-                String[] paramNames = paranamer.lookupParameterNames(method);
-                String paramName = paramNames[i];
-                System.out.println(paramName);
-                String paramValue = request.getParameter(paramName);
-                paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
             }
+            // else {
+                
+            //     Paranamer paranamer = new AdaptiveParanamer();
+            //     String[] paramNames = paranamer.lookupParameterNames(method);
+            //     String paramName = paramNames[i];
+            //     System.out.println(paramName);
+            //     String paramValue = request.getParameter(paramName);
+            //     paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
+            // }
         }
     
         return paramValues;
