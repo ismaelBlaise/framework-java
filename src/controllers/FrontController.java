@@ -3,6 +3,7 @@ package controllers;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
@@ -13,9 +14,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import util.Mapping;
 import util.ModelAndView;
 import annotation.Controller;
+import annotation.FieldAnnotation;
 import annotation.Get;
+import annotation.ParamObject;
 import annotation.Post;
-import annotation.RequestParam;
+import annotation.Param;
 
 import java.util.List;
 import java.util.Map;
@@ -23,8 +26,11 @@ import java.util.ArrayList;
 import jakarta.servlet.ServletContext;
 import java.io.File;
 import java.net.URL;
+import java.sql.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+
+
 
 public class FrontController extends HttpServlet {
     private List<String> controllerList = new ArrayList<>();
@@ -203,18 +209,70 @@ public class FrontController extends HttpServlet {
     private Object[] getMethodParameters(Method method, HttpServletRequest request) throws Exception {
         Parameter[] parameters = method.getParameters();
         Object[] paramValues = new Object[parameters.length];
-
+    
         for (int i = 0; i < parameters.length; i++) {
-            RequestParam requestParam = parameters[i].getAnnotation(RequestParam.class);
+            Param requestParam = parameters[i].getAnnotation(Param.class);
+            ParamObject objectParam = parameters[i].getAnnotation(ParamObject.class);
+
             if (requestParam != null) {
-                String paramName = requestParam.value();
+                 
+                String paramName = requestParam.name();
                 String paramValue = request.getParameter(paramName);
                 paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
-            }
-        }
+            } else if (objectParam != null) {
+                
+                Class<?> paramType = parameters[i].getType();
+                Object paramObject = paramType.getDeclaredConstructor().newInstance();
 
+                 
+                Map<String, String[]> parameterMap = request.getParameterMap();
+                for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                    
+                    String fullParamName = entry.getKey();
+                    String[] paramNameParts = fullParamName.split("\\.");
+                    if (paramNameParts.length < 2) continue;
+
+                    String objectName = paramNameParts[0];
+                    String fieldName = paramNameParts[1];
+
+                    
+                    if (objectName.equalsIgnoreCase(objectParam.name())) {
+                        Field[] fields = paramType.getDeclaredFields();
+                        for (Field field : fields) {
+                            String fieldValue = null;
+                            
+                            FieldAnnotation fieldAnnotation = field.getAnnotation(FieldAnnotation.class);
+                            if (fieldAnnotation != null && fieldAnnotation.name().equalsIgnoreCase(fieldName)) {
+                                
+                                fieldValue = request.getParameter(fullParamName);
+                            } else if (field.getName().equalsIgnoreCase(fieldName)) {
+                                fieldValue = request.getParameter(fullParamName);
+                            }
+
+                            if (fieldValue != null) {
+                                field.setAccessible(true);
+                                field.set(paramObject, convertParameterType(fieldValue, field.getType()));
+                            }
+                        }
+                    }
+                }
+
+                paramValues[i] = paramObject;
+            }
+            // else {
+                
+            //     Paranamer paranamer = new AdaptiveParanamer();
+            //     String[] paramNames = paranamer.lookupParameterNames(method);
+            //     String paramName = paramNames[i];
+            //     System.out.println(paramName);
+            //     String paramValue = request.getParameter(paramName);
+            //     paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
+            // }
+        }
+    
         return paramValues;
     }
+    
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private Object convertParameterType(String paramValue, Class<?> paramType) throws Exception {
@@ -232,6 +290,8 @@ public class FrontController extends HttpServlet {
             return Double.parseDouble(paramValue);
         } else if (paramType == boolean.class || paramType == Boolean.class) {
             return Boolean.parseBoolean(paramValue);
+        }else if (paramType == Date.class || paramType == Date.class) {
+            return Date.valueOf(paramValue);
         } else if (paramType.isEnum()) {
             return Enum.valueOf((Class<Enum>) paramType, paramValue);
         } else {

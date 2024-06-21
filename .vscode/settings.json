@@ -1,6 +1,8 @@
 {
     "java.project.referencedLibraries": [
         "lib/**/*.jar",
-        "e:\\web-dyn\\EventReserve\\lib\\servlet-api.jar"
+        "e:\\web-dyn\\EventReserve\\lib\\servlet-api.jar",
+        "c:\\Users\\ismab\\Downloads\\paranamer-2.8.jar",
+        "c:\\Users\\ismab\\OneDrive\\Documents\\GitHub\\test\\lib\\paranamer-2.8.jar"
     ]
 }
