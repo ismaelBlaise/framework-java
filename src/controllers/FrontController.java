@@ -146,7 +146,7 @@ public class FrontController extends HttpServlet {
         }
 
         if (controllerList.isEmpty()) {
-            throw new Exception("No classes annotated with @AnnotationController found in package " + packageName);
+            throw new Exception("No classes annotated with @Controller found in package " + packageName);
         }
     }
 

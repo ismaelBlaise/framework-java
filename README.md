@@ -15,4 +15,7 @@ pour utiliser le framework :
  ensuite ajouter les variable avec modelAndView.setAttribute("nom_de_variable",Object object);
 -Sprint 5:
  Veuillez a ajouters des controllers et a bien annoter pour ne pas sotir une exception
+-Sprint 6:
+ Pour recuperer des donnees via le formulaire dans vos methodes annoter vos parametre par param
+
  
