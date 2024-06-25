@@ -259,6 +259,11 @@ public class FrontController extends HttpServlet {
 
                 paramValues[i] = paramObject;
             }
+            // else{
+            //     String paramName = parameters[i].getName();
+            //     String paramValue = request.getParameter(paramName);
+            //     paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
+            // }
             // else {
                 
             //     Paranamer paranamer = new AdaptiveParanamer();
