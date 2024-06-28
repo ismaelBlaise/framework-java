@@ -11,6 +11,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import util.CustomSession;
 import util.Mapping;
 import util.ModelAndView;
 import annotation.Controller;
@@ -22,8 +24,11 @@ import annotation.Param;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ArrayList;
 import jakarta.servlet.ServletContext;
+
+import java.io.Console;
 import java.io.File;
 import java.net.URL;
 import java.sql.Date;
@@ -64,12 +69,25 @@ public class FrontController extends HttpServlet {
             out.println("<html>");
             out.println("<head>");
             out.println("<title>FrontController</title>");
+            out.println("<style>.error-message {\n" + //
+                    "    color: red;\n" + //
+                    "    font-weight: bold;\n" + //
+                    "}\n" + //
+                    "\n" + //
+                    ".stack-trace {\n" + //
+                    "    font-family: monospace;\n" + //
+                    "    margin-top: 10px;\n" + //
+                    "    padding: 10px;\n" + //
+                    "    background-color: #f8f8f8;\n" + //
+                    "    border: 1px solid #ccc;\n" + //
+                    "}\n" + //
+                    "</style>");
             out.println("</head>");
             out.println("<body>");
             out.println("<p><b>URL:</b> " + requestURL + "</p>");
-            out.println("<p><b>Method:</b> " + requestMethod + "</p>");
-            
-            out.println("<p><b>Available Controllers:</b></p>");
+            out.println("<p><b>Méthode HTTP:</b> " + requestMethod + "</p>");
+
+            out.println("<p><b>Contrôleurs Disponibles:</b></p>");
             out.println("<ul>");
             for (String controller : controllerList) {
                 out.println("<li>" + controller + "</li>");
@@ -79,24 +97,40 @@ public class FrontController extends HttpServlet {
             String mappedURL = requestURL.replace(baseUrl, "");
             if (urlMappings.containsKey(mappedURL)) {
                 Mapping map = urlMappings.get(mappedURL);
-                out.println("<b>Controller Class:</b> " + map.getControlleur() + "<br>");
-                out.println("<b>Associated Method:</b> " + map.getMethode() + "<br>");
+                out.println("<b>Classe du Contrôleur:</b> " + map.getControlleur() + "<br>");
+                out.println("<b>Méthode Associée:</b> " + map.getMethode() + "<br>");
 
                 try {
                     Class<?> clazz = Class.forName(map.getControlleur());
-                    Method[] meth = clazz.getDeclaredMethods();
-                    Method method=null;
+                    Method[] methods = clazz.getDeclaredMethods();
+                    Method method = null;
 
-                    for (Method method1 : meth) {
-                        if(method1.getName().compareTo(map.getMethode())==0){
-                            method=method1;
+                    for (Method method1 : methods) {
+                        if (method1.getName().equals(map.getMethode())) {
+                            method = method1;
+                            break;
                         }
                     }
+
+                    if (method == null) {
+                        throw new Exception("Méthode non trouvée : " + map.getMethode());
+                    }
+
                     Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
                     Object result = method.invoke(controllerInstance, getMethodParameters(method, request));
 
+                    for (Parameter parameter : method.getParameters()) {
+                        if(parameter.getType()==CustomSession.class){
+                            HttpSession session = request.getSession();
+                            CustomSession customSession=(CustomSession) session.getAttribute("CustomSession");
+                            for (Entry<String,Object> keyValue : customSession.getValues().entrySet()) {
+                                session.setAttribute(keyValue.getKey(), keyValue.getValue());
+                            }
+                        }
+                    }
+
                     if (result instanceof String) {
-                        out.println("<br>Method Invocation Result: " + result);
+                        out.println("<br>Résultat de l'invocation de méthode : " + result);
                     } else if (result instanceof ModelAndView) {
                         ModelAndView modelAndView = (ModelAndView) result;
                         for (String key : modelAndView.getData().keySet()) {
@@ -106,11 +140,16 @@ public class FrontController extends HttpServlet {
                         return;
                     }
                 } catch (Exception e) {
-                    out.println("Error invoking method: " + e.getMessage());
+                    out.println("<div class='error-message'>Erreur lors de l'invocation : " + e.getMessage() + "</div>");
+                    out.println("<div class='stack-trace'>Trace de la pile :");
+                    for (StackTraceElement element : e.getStackTrace()) {
+                        out.println("<div>" + element.toString() + "</div>");
+                    }
+                    out.println("</div>");
                     e.printStackTrace();
                 }
             } else {
-                out.println("<p>No associated method found for this URL.</p>");
+                out.println("<p class='error-message' >Aucune méthode associée à cet URL.</p>");
             }
 
             out.println("</body>");
@@ -123,7 +162,7 @@ public class FrontController extends HttpServlet {
         String packageName = context.getInitParameter("package-to-scan");
 
         if (packageName == null) {
-            throw new Exception("No package-to-scan parameter found in context.");
+            throw new Exception("Aucune package-to-scan trouver dans le context.");
         }
 
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -142,11 +181,11 @@ public class FrontController extends HttpServlet {
         }
 
         if (packageEmpty) {
-            throw new Exception("The package " + packageName + " is empty.");
+            throw new Exception("Le package " + packageName + " est vide.");
         }
 
         if (controllerList.isEmpty()) {
-            throw new Exception("No classes annotated with @Controller found in package " + packageName);
+            throw new Exception("Aucune class annoter par @Controller trouver dans :" + packageName);
         }
     }
 
@@ -178,7 +217,7 @@ public class FrontController extends HttpServlet {
                         }
                     }
                 } catch (ClassNotFoundException e) {
-                    throw new Exception("Class not found: " + className, e);
+                    throw new Exception("Class non trouve: " + className, e);
                 }
             }
         }
@@ -201,7 +240,7 @@ public class FrontController extends HttpServlet {
                 urlMappings.put(urlName, new Mapping(clazz.getName(), method.getName()));
             }
         } else {
-            throw new Exception("Method return type must be String or ModelAndView.");
+            throw new Exception("Les methode doivent retourner soit String soit ModelAndView.");
         }
     }
     
@@ -259,20 +298,18 @@ public class FrontController extends HttpServlet {
 
                 paramValues[i] = paramObject;
             }
-            // else{
-            //     String paramName = parameters[i].getName();
-            //     String paramValue = request.getParameter(paramName);
-            //     paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
-            // }
-            // else {
+            else if(parameters[i].getType()== CustomSession.class){
+                HttpSession session=request.getSession();
+                CustomSession customSession=new CustomSession();
                 
-            //     Paranamer paranamer = new AdaptiveParanamer();
-            //     String[] paramNames = paranamer.lookupParameterNames(method);
-            //     String paramName = paramNames[i];
-            //     System.out.println(paramName);
-            //     String paramValue = request.getParameter(paramName);
-            //     paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
-            // }
+                
+                
+                paramValues[i]=customSession;
+            }
+            else if(requestParam == null && objectParam == null && parameters[i].getType() != CustomSession.class){
+                throw new Exception("<b>ETU002391</b>  les parametres doivent etre annoter par @Param ou @ParamObject");
+            }
+            
         }
     
         return paramValues;
