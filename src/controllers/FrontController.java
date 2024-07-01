@@ -119,15 +119,6 @@ public class FrontController extends HttpServlet {
                     Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
                     Object result = method.invoke(controllerInstance, getMethodParameters(method, request));
 
-                    for (Parameter parameter : method.getParameters()) {
-                        if(parameter.getType()==CustomSession.class){
-                            HttpSession session = request.getSession();
-                            CustomSession customSession=(CustomSession) session.getAttribute("CustomSession");
-                            for (Entry<String,Object> keyValue : customSession.getValues().entrySet()) {
-                                session.setAttribute(keyValue.getKey(), keyValue.getValue());
-                            }
-                        }
-                    }
 
                     if (result instanceof String) {
                         out.println("<br>Résultat de l'invocation de méthode : " + result);
@@ -300,9 +291,7 @@ public class FrontController extends HttpServlet {
             }
             else if(parameters[i].getType()== CustomSession.class){
                 HttpSession session=request.getSession();
-                CustomSession customSession=new CustomSession();
-                
-                
+                CustomSession customSession=new CustomSession(session);
                 
                 paramValues[i]=customSession;
             }

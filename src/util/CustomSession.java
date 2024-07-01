@@ -1,52 +1,29 @@
 package util;
 
-import java.util.HashMap;
+import jakarta.servlet.http.HttpSession;
 
 public class CustomSession {
-    private HashMap<String,Object> values=new HashMap<>();
+    private HttpSession session;
 
-    public CustomSession() {
+    public CustomSession(HttpSession session) {
+        this.session=session;
     }
 
-    public CustomSession(HashMap<String, Object> values) {
-        this.values = values;
-    }
-
-    public HashMap<String, Object> getValues() {
-        return values;
-    }
-
-    public void setValues(HashMap<String, Object> values) {
-        this.values = values;
-    }
-
-    public void add(String key,Object value) throws Exception{
-        if(values.containsKey(key)){
-            throw new Exception("La cle existe deja");
-        }
-        this.values.put(key, value);
+    public void add(String key,Object value){
+        this.session.setAttribute(key,value);
     }
 
 
-    public Object get(String key) throws Exception{
-        if(!values.containsKey(key)){
-            throw new Exception("La cle n'existe pas");
-        }
-        return this.values.get(key);
+    public Object get(String key){
+        return this.session.getAttribute(key);
     }
 
-    public void remove(String key) throws Exception{
-        if(values.containsKey(key)){
-            throw new Exception("La cle existe deja");
-        }
-        this.values.remove(key);
+    public void remove(String key){
+        this.session.removeAttribute(key);
     }
 
-    public void update(String key,Object value) throws Exception{
-        if(!values.containsKey(key)){
-            throw new Exception("La cle n'existe pas");
-        }
-        this.values.replace(key, value);
+    public void update(String key,Object value){
+        this.session.setAttribute(key, value);
     }
 
     
