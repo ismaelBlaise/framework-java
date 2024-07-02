@@ -117,8 +117,14 @@ public class FrontController extends HttpServlet {
                     }
 
                     Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
-                    Object result = method.invoke(controllerInstance, getMethodParameters(method, request));
+                    Object[] methodParam=getMethodParameters(method, request);
+                    Object result = method.invoke(controllerInstance,methodParam );
 
+                    for(Object param: methodParam){
+                        if(param instanceof CustomSession){
+                            synchronizeSession(request.getSession(),(CustomSession) param);
+                        }
+                    }
 
                     if (result instanceof String) {
                         out.println("<br>Résultat de l'invocation de méthode : " + result);
@@ -291,7 +297,12 @@ public class FrontController extends HttpServlet {
             }
             else if(parameters[i].getType()== CustomSession.class){
                 HttpSession session=request.getSession();
-                CustomSession customSession=new CustomSession(session);
+                CustomSession customSession=new CustomSession();
+                Enumeration<String> attributeNames=session.getAttributeNames();
+                while(attributeNames.hasMoreElements()){
+                    String attributeName=attributeNames.nextElement();
+                    customSession.add(attributeName, session.getAttribute(attributeName));
+                }
                 
                 paramValues[i]=customSession;
             }
@@ -304,6 +315,12 @@ public class FrontController extends HttpServlet {
         return paramValues;
     }
     
+    private void synchronizeSession(HttpSession httpSession,CustomSession customSession){
+        Map<String,Object> values=customSession.getValues();
+        for (Map.Entry<String,Object> entry : values.entrySet()) {
+            httpSession.setAttribute(entry.getKey(), entry.getValue());
+        }
+    }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private Object convertParameterType(String paramValue, Class<?> paramType) throws Exception {
