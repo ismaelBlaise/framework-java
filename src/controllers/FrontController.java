@@ -95,6 +95,7 @@ public class FrontController extends HttpServlet {
             out.println("</ul>");
 
             String mappedURL = requestURL.replace(baseUrl, "");
+           
             if (urlMappings.containsKey(mappedURL)) {
                 Mapping map = urlMappings.get(mappedURL);
                 out.println("<b>Classe du Contrôleur:</b> " + map.getControlleur() + "<br>");
@@ -315,12 +316,28 @@ public class FrontController extends HttpServlet {
         return paramValues;
     }
     
-    private void synchronizeSession(HttpSession httpSession,CustomSession customSession){
-        Map<String,Object> values=customSession.getValues();
-        for (Map.Entry<String,Object> entry : values.entrySet()) {
+    private void synchronizeSession(HttpSession httpSession, CustomSession customSession) {
+        Map<String, Object> customSessionValues = customSession.getValues();
+        Enumeration<String> httpSessionAttributeNames = httpSession.getAttributeNames();
+        List<String> attributesToRemove = new ArrayList<>();
+ 
+        while (httpSessionAttributeNames.hasMoreElements()) {
+            String attributeName = httpSessionAttributeNames.nextElement();
+            if (!customSessionValues.containsKey(attributeName)) {
+                attributesToRemove.add(attributeName);
+            }
+        }
+
+        
+        for (String attributeName : attributesToRemove) {
+            httpSession.removeAttribute(attributeName);
+        } 
+        
+        for (Map.Entry<String, Object> entry : customSessionValues.entrySet()) {
             httpSession.setAttribute(entry.getKey(), entry.getValue());
         }
     }
+
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private Object convertParameterType(String paramValue, Class<?> paramType) throws Exception {
