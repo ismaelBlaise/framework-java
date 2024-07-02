@@ -106,7 +106,22 @@ public class FrontController extends HttpServlet {
                     Class<?> clazz = Class.forName(map.getControlleur());
                     Method[] methods = clazz.getDeclaredMethods();
                     Method method = null;
-
+                    Field[] attributs=clazz.getDeclaredFields();
+                    if(attributs!=null){
+                        for(Field field:attributs){
+                            if(field.getType()==CustomSession.class){
+                                HttpSession session=request.getSession();
+                                CustomSession customSession=new CustomSession();
+                                Enumeration<String> attributeNames=session.getAttributeNames();
+                                while(attributeNames.hasMoreElements()){
+                                    String attributeName=attributeNames.nextElement();
+                                    customSession.add(attributeName, session.getAttribute(attributeName));
+                                }
+                                Object custom=customSession;
+                                field=(Field) custom;
+                            }
+                        }
+                    }
                     for (Method method1 : methods) {
                         if (method1.getName().equals(map.getMethode())) {
                             method = method1;
