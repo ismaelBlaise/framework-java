@@ -9,31 +9,19 @@ public class CustomSession {
     public CustomSession() {
     }
 
-    public void add(String key,Object value)  throws Exception{
-        if(values.containsKey(key)){
-            throw new Exception("La cle existe deja");
-        }
+    public void add(String key,Object value) {
         values.putIfAbsent(key, value);
     }
 
-    public Object get(String key) throws Exception{
-        if(!values.containsKey(key)){
-            throw new Exception("La cle n'existe pas");
-        }
+    public Object get(String key){
         return values.get(key);
     }
 
-    public void update(String key,Object value) throws Exception{
-        if(!values.containsKey(key)){
-            throw new Exception("La cle n'existe pas");
-        }
+    public void update(String key,Object value){
         values.replace(key, value);
     }
     
-    public void delete(String key) throws Exception{
-        if(!values.containsKey(key)){
-            throw new Exception("La cle n'existe pas");
-        }
+    public void delete(String key){
         this.values.remove(key);
     }
 
