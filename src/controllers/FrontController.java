@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
@@ -117,25 +118,34 @@ public class FrontController extends HttpServlet {
                         throw new Exception("Méthode non trouvée : " + map.getMethode());
                     }
 
-                    Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
-                    Object[] methodParam=getMethodParameters(method, request);
-                    Object result = method.invoke(controllerInstance,methodParam );
+                    try{
+                        Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
+                        Object[] methodParam=getMethodParameters(method, request);
+                        Object result = method.invoke(controllerInstance,methodParam );
 
-                    for(Object param: methodParam){
-                        if(param instanceof CustomSession){
-                            synchronizeSession(request.getSession(),(CustomSession) param);
+                        for(Object param: methodParam){
+                            if(param instanceof CustomSession){
+                                synchronizeSession(request.getSession(),(CustomSession) param);
+                            }
                         }
-                    }
 
-                    if (result instanceof String) {
-                        out.println("<br>Résultat de l'invocation de méthode : " + result);
-                    } else if (result instanceof ModelAndView) {
-                        ModelAndView modelAndView = (ModelAndView) result;
-                        for (String key : modelAndView.getData().keySet()) {
-                            request.setAttribute(key, modelAndView.getData().get(key));
+                        if (result instanceof String) {
+                            out.println("<br>Résultat de l'invocation de méthode : " + result);
+                        } else if (result instanceof ModelAndView) {
+                            ModelAndView modelAndView = (ModelAndView) result;
+                            for (String key : modelAndView.getData().keySet()) {
+                                request.setAttribute(key, modelAndView.getData().get(key));
+                            }
+                            request.getRequestDispatcher(modelAndView.getUrl()).forward(request, response);
+                            return;
                         }
-                        request.getRequestDispatcher(modelAndView.getUrl()).forward(request, response);
-                        return;
+                    }catch (InvocationTargetException e) {
+                        Throwable cause = e.getCause();
+                        if (cause instanceof Exception) {
+                            throw (Exception) cause; 
+                        } else {
+                            throw new Exception("Erreur lors de l'invocation : " + cause.getMessage());
+                        }
                     }
                 } catch (Exception e) {
                     out.println("<div class='error-message'>Erreur lors de l'invocation : " + e.getMessage() + "</div>");
