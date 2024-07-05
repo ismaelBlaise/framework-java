@@ -106,22 +106,7 @@ public class FrontController extends HttpServlet {
                     Class<?> clazz = Class.forName(map.getControlleur());
                     Method[] methods = clazz.getDeclaredMethods();
                     Method method = null;
-                    Field[] attributs=clazz.getDeclaredFields();
-                    if(attributs!=null){
-                        for(Field field:attributs){
-                            if(field.getType()==CustomSession.class){
-                                HttpSession session=request.getSession();
-                                CustomSession customSession=new CustomSession();
-                                Enumeration<String> attributeNames=session.getAttributeNames();
-                                while(attributeNames.hasMoreElements()){
-                                    String attributeName=attributeNames.nextElement();
-                                    customSession.add(attributeName, session.getAttribute(attributeName));
-                                }
-                                Object custom=customSession;
-                                field=(Field) custom;
-                            }
-                        }
-                    }
+        
                     for (Method method1 : methods) {
                         if (method1.getName().equals(map.getMethode())) {
                             method = method1;
@@ -135,8 +120,19 @@ public class FrontController extends HttpServlet {
 
                     try{
                         Object controllerInstance = clazz.getDeclaredConstructor().newInstance();
+                        Field[] fields=clazz.getDeclaredFields();
+                        for(Field field: fields){
+                            if(field.getType()==CustomSession.class){
+                                field.setAccessible(true);
+                                field.set(controllerInstance, new CustomSession());
+                            }
+                        }
+
                         Object[] methodParam=getMethodParameters(method, request);
                         Object result = method.invoke(controllerInstance,methodParam );
+
+                       
+
 
                         for(Object param: methodParam){
                             if(param instanceof CustomSession){
