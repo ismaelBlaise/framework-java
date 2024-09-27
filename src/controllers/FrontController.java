@@ -21,11 +21,15 @@ import annotation.FieldAnnotation;
 import annotation.Get;
 import annotation.ParamObject;
 import annotation.Post;
+import annotation.RestApi;
 import annotation.Param;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import jakarta.servlet.ServletContext;
 
@@ -42,10 +46,10 @@ public class FrontController extends HttpServlet {
     private List<String> controllerList = new ArrayList<>();
     private Map<String, Mapping> urlMappings = new HashMap<>();
     private boolean initialized = false;
-
+    private Gson gson=new Gson();
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
+        
 
         synchronized (this) {
             if (!initialized) {
@@ -139,16 +143,31 @@ public class FrontController extends HttpServlet {
                                 synchronizeSession(request.getSession(),(CustomSession) param);
                             }
                         }
-
+                        response.setContentType("text/html;charset=UTF-8");
                         if (result instanceof String) {
                             out.println("<br>Résultat de l'invocation de méthode : " + result);
                         } else if (result instanceof ModelAndView) {
+                            
+                            
                             ModelAndView modelAndView = (ModelAndView) result;
+                            if(method.isAnnotationPresent(RestApi.class)){
+                                response.setContentType("application/json;charset=UTF-8");
+                                
+                                out.println(gson.toJson(modelAndView.getData()));
+                                
+                                return;
+                            }
                             for (String key : modelAndView.getData().keySet()) {
                                 request.setAttribute(key, modelAndView.getData().get(key));
                             }
                             request.getRequestDispatcher(modelAndView.getUrl()).forward(request, response);
                             return;
+                        }
+                        else{
+                            if(method.isAnnotationPresent(RestApi.class)){
+                                response.setContentType("application/json;charset=UTF-8");
+                                out.println(result);
+                            }
                         }
                     }catch (InvocationTargetException e) {
                         Throwable cause = e.getCause();
