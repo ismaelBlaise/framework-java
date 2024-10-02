@@ -256,7 +256,7 @@ public class FrontController extends HttpServlet {
                         controllerList.add(className);
                         Method[] methods = clazz.getDeclaredMethods();
                         for (Method method : methods) {
-                            if (method.isAnnotationPresent(Get.class) || method.isAnnotationPresent(Post.class)) {
+                            if (method.isAnnotationPresent(Url.class)) {
                                 validateAndRegisterMethod(clazz, method);
                             }
                         }
