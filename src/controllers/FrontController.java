@@ -22,6 +22,7 @@ import annotation.Get;
 import annotation.ParamObject;
 import annotation.Post;
 import annotation.RestApi;
+import annotation.Url;
 import annotation.Param;
 
 import java.util.List;
@@ -103,6 +104,12 @@ public class FrontController extends HttpServlet {
            
             if (urlMappings.containsKey(mappedURL)) {
                 Mapping map = urlMappings.get(mappedURL);
+                if (map.getVerb() == Get.class && request.getMethod().equals("POST")) {
+                    throw new Exception("Vous essayez d'utiliser une méthode POST pour une route qui attend un GET.");
+                }
+                if (map.getVerb() == Post.class && request.getMethod().equals("GET")) {
+                    throw new Exception("Vous essayez d'utiliser une méthode GET pour une route qui attend un POST.");
+                }
                 out.println("<b>Classe du Contrôleur:</b> " + map.getControlleur() + "<br>");
                 out.println("<b>Méthode Associée:</b> " + map.getMethode() + "<br>");
 
@@ -264,18 +271,21 @@ public class FrontController extends HttpServlet {
     private void validateAndRegisterMethod(Class<?> clazz, Method method) throws Exception {
         if (method.getReturnType().equals(String.class) || method.getReturnType().equals(ModelAndView.class)) {
             String urlName = null;
-            if (method.isAnnotationPresent(Get.class)) {
-                Get getAnnotation = method.getAnnotation(Get.class);
-                urlName = getAnnotation.url();
-            } else if (method.isAnnotationPresent(Post.class)) {
-                Post postAnnotation = method.getAnnotation(Post.class);
-                urlName = postAnnotation.url();
+            if(method.isAnnotationPresent(Url.class)){
+                Url urlAnnotation=method.getAnnotation(Url.class);
+                surlName = urlAnnotation.url();
+                
             }
 
             if (urlName != null && urlMappings.containsKey(urlName)) {
                 throw new Exception("URL " + urlName + " is already defined.");
             } else if (urlName != null) {
-                urlMappings.put(urlName, new Mapping(clazz.getName(), method.getName()));
+                if(method.isAnnotationPresent(Post.class)){
+                    urlMappings.put(urlName, new Mapping(clazz.getName(), method.getName(),Post.class));
+                }
+                else{
+                    urlMappings.put(urlName, new Mapping(clazz.getName(), method.getName(),Get.class));
+                }
             }
         } else {
             throw new Exception("Les methode doivent retourner soit String soit ModelAndView.");
