@@ -4,13 +4,16 @@ REM Déclaration des variables
     set nom_projet=framework
     set temp=C:\Users\ismab\OneDrive\Documents\GitHub\test\%nom_projet%
     set lib=C:\Users\ismab\OneDrive\Documents\GitHub\test\lib
-    set lib-framework=C:\Users\ismab\OneDrive\Documents\GitHub\test\lib
+    set lib-framework=C:\Users\ismab\OneDrive\Documents\GitHub\main\lib
     set src=C:\Users\ismab\OneDrive\Documents\GitHub\main\src
 
 REM Compilation des fichiers Java dans des packages
     for /r %src% %%i in (*.java) do (
         javac -cp "%lib-framework%\*;" -sourcepath %src% -d %temp% "%%i"
     )
+
+REM Copie des *.jar de notre espace de travail initial ver temp/WEB-INF/lib
+    xcopy /s /e /q %lib-framework% %temp%"\lib"
 
 REM Convertir le répertoire temp en .jar
     jar -cvf %nom_projet%.jar -C %temp% .
