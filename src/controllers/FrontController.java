@@ -102,10 +102,7 @@ public class FrontController extends HttpServlet {
             out.println("</ul>");
 
             String mappedURL = requestURL.replace(baseUrl, "");
-            if (!urlMappings.containsKey(mappedURL)) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "L'URL demandée est introuvable.");
-                return;
-            }
+            
             
             if (urlMappings.containsKey(mappedURL)) {
                 try {
