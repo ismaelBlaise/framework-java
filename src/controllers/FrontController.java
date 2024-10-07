@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpSession;
 import util.CustomSession;
 import util.Mapping;
 import util.ModelAndView;
+import util.VerbAction;
 import annotation.Controller;
 import annotation.FieldAnnotation;
 import annotation.Get;
@@ -103,17 +104,16 @@ public class FrontController extends HttpServlet {
             String mappedURL = requestURL.replace(baseUrl, "");
            
             if (urlMappings.containsKey(mappedURL)) {
-                Mapping map = urlMappings.get(mappedURL);
-                if (map.getVerb() == Get.class && request.getMethod().equals("POST")) {
-                    throw new Exception("Vous essayez d'utiliser une méthode POST pour une route qui attend un GET.");
-                }
-                if (map.getVerb() == Post.class && request.getMethod().equals("GET")) {
-                    throw new Exception("Vous essayez d'utiliser une méthode GET pour une route qui attend un POST.");
-                }
-                out.println("<b>Classe du Contrôleur:</b> " + map.getControlleur() + "<br>");
-                out.println("<b>Méthode Associée:</b> " + map.getMethode() + "<br>");
-
                 try {
+                
+                    Mapping map = urlMappings.get(mappedURL);
+                    if(!map.getVerbAction().testVerbAction(request.getMethod(), mappedURL)){
+                        throw new Exception("Vous essayez d'utiliser une requette avec la methode "+map.getVerbAction().getVerb()+" au lieu de "+request.getMethod());
+                    }
+                    out.println("<b>Classe du Contrôleur:</b> " + map.getControlleur() + "<br>");
+                    out.println("<b>Méthode Associée:</b> " + map.getMethode() + "<br>");
+
+                
                     Class<?> clazz = Class.forName(map.getControlleur());
                     Method[] methods = clazz.getDeclaredMethods();
                     Method method = null;
@@ -273,7 +273,7 @@ public class FrontController extends HttpServlet {
             String urlName = null;
             if(method.isAnnotationPresent(Url.class)){
                 Url urlAnnotation=method.getAnnotation(Url.class);
-                surlName = urlAnnotation.url();
+                urlName = urlAnnotation.url();
                 
             }
 
@@ -281,10 +281,10 @@ public class FrontController extends HttpServlet {
                 throw new Exception("URL " + urlName + " is already defined.");
             } else if (urlName != null) {
                 if(method.isAnnotationPresent(Post.class)){
-                    urlMappings.put(urlName, new Mapping(clazz.getName(), method.getName(),Post.class));
+                    urlMappings.put(urlName, new Mapping(clazz.getName(), method.getName(),new VerbAction("POST", urlName)));
                 }
                 else{
-                    urlMappings.put(urlName, new Mapping(clazz.getName(), method.getName(),Get.class));
+                    urlMappings.put(urlName, new Mapping(clazz.getName(), method.getName(),new VerbAction("GET",urlName)));
                 }
             }
         } else {
