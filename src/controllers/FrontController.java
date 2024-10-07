@@ -108,7 +108,7 @@ public class FrontController extends HttpServlet {
                 
                     Mapping map = urlMappings.get(mappedURL);
                     if(!map.getVerbAction().testVerbAction(request.getMethod(), mappedURL)){
-                        throw new Exception("Vous essayez d'utiliser une requette avec la methode "+map.getVerbAction().getVerb()+" au lieu de "+request.getMethod());
+                        throw new Exception("Vous essayez d'utiliser une requette avec la methode "+request.getMethod()+" au lieu de "+map.getVerbAction().getVerb());
                     }
                     out.println("<b>Classe du Contrôleur:</b> " + map.getControlleur() + "<br>");
                     out.println("<b>Méthode Associée:</b> " + map.getMethode() + "<br>");
