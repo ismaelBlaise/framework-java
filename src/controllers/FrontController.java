@@ -28,6 +28,7 @@ import annotation.Param;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.google.gson.Gson;
@@ -111,9 +112,26 @@ public class FrontController extends HttpServlet {
                 try {
                 
                     Mapping map = urlMappings.get(mappedURL);
-                    for()
+                    String nomMethode = "";
+                    boolean methodFound = false; // Indique si la méthode est trouvée
+            
+                    Iterator<VerbAction> iterator = map.getVerbeAction().iterator();
+                    
+                    // Itérer sur les objets VerbAction
+                    while (iterator.hasNext()) {
+                        VerbAction verbAction = iterator.next();
+                        // Vérifiez si le verbe correspond à la méthode de requête
+                        if (verbAction.getVerb().equals(requestMethod)) {
+                            nomMethode = verbAction.getAction(); // Obtenir le nom de la méthode associée
+                            methodFound = true; // Définir le drapeau sur true
+                            break; // Sortir de la boucle car nous avons trouvé une méthode correspondante
+                        }
+                    }
+                    if(methodFound == false){
+                        throw new Exception("Vous essayer d'utiliser une type de requette "+requestMethod+" au lieu de "+requestMethod=="GET"? "POST":"GET");
+                    }
                     out.println("<b>Classe du Contrôleur:</b> " + map.getControlleur() + "<br>");
-                    out.println("<b>Méthode Associée:</b> " + map.getMethode() + "<br>");
+                    out.println("<b>Méthode Associée:</b> " + nomMethode + "<br>");
 
                 
                     Class<?> clazz = Class.forName(map.getControlleur());
@@ -121,14 +139,14 @@ public class FrontController extends HttpServlet {
                     Method method = null;
         
                     for (Method method1 : methods) {
-                        if (method1.getName().equals(map.getMethode())) {
+                        if (method1.getName().equals(nomMethode)) {
                             method = method1;
                             break;
                         }
                     }
 
                     if (method == null) {
-                        throw new Exception("Méthode non trouvée : " + map.getMethode());
+                        throw new Exception("Méthode non trouvée : " + nomMethode);
                     }
 
                     try{
@@ -273,14 +291,28 @@ public class FrontController extends HttpServlet {
     private void validateAndRegisterMethod(Class<?> clazz, Method method) throws Exception {
         if (method.getReturnType().equals(String.class) || method.getReturnType().equals(ModelAndView.class)) {
             String urlName = null;
-            if(method.isAnnotationPresent(Url.class)){
-                Url urlAnnotation=method.getAnnotation(Url.class);
-                urlName = urlAnnotation.url();
+            
+            Url urlAnnotation=method.getAnnotation(Url.class);
+            urlName = urlAnnotation.url();
                 
-            }
+            
 
-            if (urlName != null && urlMappings.containsKey(urlName)) {
-                throw new Exception("URL " + urlName + " is already defined.");
+            if (urlName != null && urlMappings.containsKey(urlName) ) {
+                Mapping mapping=urlMappings.get(urlName);
+                Iterator<VerbAction> verbActions=mapping.getVerbeAction().iterator();
+                while (verbActions.hasNext()) {
+                    VerbAction verbAction = verbActions.next();
+                    String currentVerb = method.isAnnotationPresent(Post.class) ? "POST" : "GET";
+    
+                    
+                    if (verbAction.testVerbAction(currentVerb, method.getName())) {
+                        throw new Exception("URL " + urlName + " with " + currentVerb + " is already defined.");
+                    }
+                    mapping.addVerbAction(new VerbAction(currentVerb,method.getName()));
+                }
+                
+                
+                
             } else if (urlName != null) {
                 Mapping mapping=new Mapping(clazz.getName());
                 if(method.isAnnotationPresent(Post.class)){
