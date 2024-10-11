@@ -1,33 +1,45 @@
 package util;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class Mapping {
-    private String controlleur;
-    private String methode;
-    private VerbAction verbAction;
-    public Mapping() {
-    }
-    public Mapping(String controlleur, String methode, VerbAction verbAction) {
+    private String controlleur;        // Nom du contrôleur
+    private Set<VerbAction> verbeAction; // Ensemble d'actions de verbes
+
+    // Constructeur
+    public Mapping(String controlleur) {
         this.controlleur = controlleur;
-        this.methode = methode;
-        this.verbAction = verbAction;
+        this.verbeAction = new HashSet<>(); // Initialisation de l'ensemble
     }
+
+    // Méthode pour ajouter une action de verbe
+    public void addVerbAction(VerbAction verbAction) {
+        this.verbeAction.add(verbAction);
+    }
+
+    // Getters et Setters
     public String getControlleur() {
         return controlleur;
     }
+
     public void setControlleur(String controlleur) {
         this.controlleur = controlleur;
     }
-    public String getMethode() {
-        return methode;
+
+    public Set<VerbAction> getVerbeAction() {
+        return verbeAction;
     }
-    public void setMethode(String methode) {
-        this.methode = methode;
+
+    public void setVerbeAction(Set<VerbAction> verbeAction) {
+        this.verbeAction = verbeAction;
     }
-    public VerbAction getVerbAction() {
-        return verbAction;
+
+    // Méthode pour afficher les verbes et leurs actions
+    public void afficherMappings() {
+        System.out.println("Contrôleur : " + controlleur);
+        for (VerbAction va : verbeAction) {
+            System.out.println("Verbe : " + va.getVerb() + ", Action : " + va.getAction());
+        }
     }
-    public void setVerbAction(VerbAction verbAction) {
-        this.verbAction = verbAction;
-    }
-    
 }

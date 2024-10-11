@@ -111,9 +111,7 @@ public class FrontController extends HttpServlet {
                 try {
                 
                     Mapping map = urlMappings.get(mappedURL);
-                    if(!map.getVerbAction().testVerbAction(request.getMethod(), mappedURL)){
-                        throw new Exception("Vous essayez d'utiliser une requette avec la methode "+request.getMethod()+" au lieu de "+map.getVerbAction().getVerb());
-                    }
+                    for()
                     out.println("<b>Classe du Contrôleur:</b> " + map.getControlleur() + "<br>");
                     out.println("<b>Méthode Associée:</b> " + map.getMethode() + "<br>");
 
@@ -284,12 +282,15 @@ public class FrontController extends HttpServlet {
             if (urlName != null && urlMappings.containsKey(urlName)) {
                 throw new Exception("URL " + urlName + " is already defined.");
             } else if (urlName != null) {
+                Mapping mapping=new Mapping(clazz.getName());
                 if(method.isAnnotationPresent(Post.class)){
-                    urlMappings.put(urlName, new Mapping(clazz.getName(), method.getName(),new VerbAction("POST", urlName)));
+                    mapping.addVerbAction(new VerbAction("POST",method.getName()));
                 }
                 else{
-                    urlMappings.put(urlName, new Mapping(clazz.getName(), method.getName(),new VerbAction("GET",urlName)));
+                    mapping.addVerbAction(new VerbAction("GET",method.getName()));
+                    
                 }
+                urlMappings.put(urlName,mapping);
             }
         } else {
             throw new Exception("Les methode doivent retourner soit String soit ModelAndView.");
