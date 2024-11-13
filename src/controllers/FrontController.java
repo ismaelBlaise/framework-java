@@ -19,14 +19,17 @@ import util.ModelAndView;
 import util.VerbAction;
 import annotation.Controller;
 import annotation.FieldAnnotation;
+import annotation.Numeric;
 import annotation.ParamObject;
 import annotation.Post;
+import annotation.Required;
 import annotation.RestApi;
 import annotation.Url;
 import annotation.Param;
 
 import java.util.List;
 import java.util.Map;
+
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -35,6 +38,8 @@ import jakarta.servlet.ServletContext;
 import java.io.File;
 import java.net.URL;
 import java.sql.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.HashMap;
 
@@ -185,6 +190,11 @@ public class FrontController extends HttpServlet {
                         }
                     }
                 } catch (Exception e) {
+                    String referer = request.getHeader("Referer");
+                    if(referer!=null){
+                        request.setAttribute("error", e.getMessage());
+                        request.getRequestDispatcher(referer).forward(request, response);
+                    }
                     out.println("<div class='error-message'>Erreur lors de l'invocation : " + e.getMessage() + "</div>");
                     out.println("<div class='stack-trace'>Trace de la pile :");
                     for (StackTraceElement element : e.getStackTrace()) {
@@ -331,7 +341,10 @@ public class FrontController extends HttpServlet {
                             FieldAnnotation fieldAnnotation = field.getAnnotation(FieldAnnotation.class);
                             if (fieldAnnotation != null && fieldAnnotation.name().equalsIgnoreCase(fieldName)) {
                                 
+
+                                
                                 fieldValue = request.getParameter(fullParamName);
+                                validateField(field, fieldValue);
                             } else if (field.getName().equalsIgnoreCase(fieldName)) {
                                 fieldValue = request.getParameter(fullParamName);
                             }
@@ -366,6 +379,45 @@ public class FrontController extends HttpServlet {
         return paramValues;
     }
     
+    private void validateField(Field field, String value) throws Exception {
+         
+        if (field.isAnnotationPresent(Required.class) && (value == null || value.isEmpty())) {
+            throw new Exception(field.getAnnotation(Required.class).message());
+        }
+        
+         
+        if (field.isAnnotationPresent(Numeric.class)) {
+            try {
+                Double.parseDouble(value);
+            } catch (NumberFormatException e) {
+                throw new Exception(field.getAnnotation(Numeric.class).message());
+            }
+        }
+        
+         
+        if (field.isAnnotationPresent(annotation.DateFormat.class)) {
+            annotation.DateFormat dateFormat = field.getAnnotation(annotation.DateFormat.class);
+            try {
+                new SimpleDateFormat(dateFormat.format()).parse(value);
+            } catch (ParseException e) {
+                throw new Exception(dateFormat.message());
+            }
+        }
+
+         if (field.isAnnotationPresent(annotation.Range.class)) {
+            annotation.Range range = field.getAnnotation(annotation.Range.class);
+            try {
+                double numericValue = Double.parseDouble(value);
+                if (numericValue < range.min() || numericValue > range.max()) {
+                    throw new Exception(range.message());
+                }
+            } catch (NumberFormatException e) {
+                throw new Exception("La valeur doit être un nombre pour verifier la plage.");
+            }
+        }
+    }
+
+
     private void synchronizeSession(HttpSession httpSession, CustomSession customSession) {
         Map<String, Object> customSessionValues = customSession.getValues();
         Enumeration<String> httpSessionAttributeNames = httpSession.getAttributeNames();

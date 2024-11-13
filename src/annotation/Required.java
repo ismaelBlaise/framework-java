@@ -7,6 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Date {
-    String format();
+public @interface Required {
+    String message() default "Ce champ est requis.";
 }
