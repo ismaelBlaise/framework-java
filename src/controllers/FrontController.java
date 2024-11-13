@@ -9,10 +9,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
+import util.CustomPart;
 import util.CustomSession;
 import util.Mapping;
 import util.ModelAndView;
@@ -20,6 +23,7 @@ import util.VerbAction;
 import annotation.Controller;
 import annotation.FieldAnnotation;
 import annotation.Numeric;
+
 import annotation.ParamObject;
 import annotation.Post;
 import annotation.Required;
@@ -44,7 +48,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 
 
-
+@MultipartConfig
 public class FrontController extends HttpServlet {
     private List<String> controllerList = new ArrayList<>();
     private Map<String, Mapping> urlMappings = new HashMap<>();
@@ -314,8 +318,15 @@ public class FrontController extends HttpServlet {
             if (requestParam != null) {
                  
                 String paramName = requestParam.name();
-                String paramValue = request.getParameter(paramName);
-                paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
+                if(parameters[i].getType()==CustomPart.class){
+                   Part part=request.getPart(paramName);
+                   paramValues[i]=new CustomPart(part);
+                }
+                else{
+                    String paramValue = request.getParameter(paramName);
+                    paramValues[i] = convertParameterType(paramValue, parameters[i].getType());
+                }
+
             } else if (objectParam != null) {
                 
                 Class<?> paramType = parameters[i].getType();
