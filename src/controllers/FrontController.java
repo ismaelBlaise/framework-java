@@ -92,7 +92,7 @@ public class FrontController extends HttpServlet {
 
             String mappedURL = requestURL.replace(baseUrl, "");
             if (!urlMappings.containsKey(mappedURL)) {
-               sb.append("L'URL demandee est introuvable.");
+            //    sb.append("L'URL demandee est introuvable.");
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "L'URL demandee est introuvable.");
                 return;
             }
@@ -139,9 +139,11 @@ public class FrontController extends HttpServlet {
                         Object result = method.invoke(controllerInstance,methodParam );
 
                         if(!handleError.isEmpty()){
+                        
                             String referer = request.getHeader("Referer");
                             System.out.println(referer);
                             if(referer!=null){
+                                
                                 request.setAttribute("error",handleError);
                                 request.getRequestDispatcher(referer).forward(request, response);
                                 return ;
