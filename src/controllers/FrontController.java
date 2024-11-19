@@ -62,35 +62,35 @@ public class FrontController extends HttpServlet {
             String requestMethod = request.getMethod();
             String baseUrl = getBaseUrl(request);
 
-           sb.append("<!DOCTYPE html>");
-           sb.append("<html>");
-           sb.append("<head>");
-           sb.append("<title>FrontController</title>");
-           sb.append("<style>.error-message {\n" + //
-                    "    color: red;\n" + //
-                    "    font-weight: bold;\n" + //
-                    "}\n" + //
-                    "\n" + //
-                    ".stack-trace {\n" + //
-                    "    font-family: monospace;\n" + //
-                    "    margin-top: 10px;\n" + //
-                    "    padding: 10px;\n" + //
-                    "    background-color: #f8f8f8;\n" + //
-                    "    border: 1px solid #ccc;\n" + //
-                    "}\n" + //
-                    "</style>");
-           sb.append("</head>");
-           sb.append("<body>");
-           sb.append("<p><b>URL:</b> " + requestURL + "</p>");
-           sb.append("<p><b>Methode HTTP:</b> " + requestMethod + "</p>");
+            sb.append("<!DOCTYPE html>");
+            sb.append("<html>");
+            sb.append("<head>");
+            sb.append("<title>FrontController</title>");
+            sb.append("<style>.error-message {\n" + //
+                        "    color: red;\n" + //
+                        "    font-weight: bold;\n" + //
+                        "}\n" + //
+                        "\n" + //
+                        ".stack-trace {\n" + //
+                        "    font-family: monospace;\n" + //
+                        "    margin-top: 10px;\n" + //
+                        "    padding: 10px;\n" + //
+                        "    background-color: #f8f8f8;\n" + //
+                        "    border: 1px solid #ccc;\n" + //
+                        "}\n" + //
+                        "</style>");
+            sb.append("</head>");
+            sb.append("<body>");
+            sb.append("<p><b>URL:</b> " + requestURL + "</p>");
+            sb.append("<p><b>Methode HTTP:</b> " + requestMethod + "</p>");
 
-           sb.append("<p><b>Controleurs Disponibles:</b></p>");
-           sb.append("<ul>");
+            sb.append("<p><b>Controleurs Disponibles:</b></p>");
+            sb.append("<ul>");
             for (String controller : controllerList) {
-               sb.append("<li>" + controller + "</li>");
+                sb.append("<li>" + controller + "</li>");
             }
-           sb.append("</ul>");
-           handleError=new HashMap<>();
+            sb.append("</ul>");
+            handleError.clear();
             String mappedURL = requestURL.replace(baseUrl, "");
             if (!urlMappings.containsKey(mappedURL)) {
             //    sb.append("L'URL demandee est introuvable.");
@@ -105,8 +105,8 @@ public class FrontController extends HttpServlet {
                     if(!map.getVerbAction().testVerbAction(request.getMethod(), mappedURL)){
                         throw new Exception("Vous essayez d'utiliser une requette avec la methode "+request.getMethod()+" au lieu de "+map.getVerbAction().getVerb());
                     }
-                   sb.append("<b>Classe du Controleur:</b> " + map.getControlleur() + "<br>");
-                   sb.append("<b>Methode Associee:</b> " + map.getMethode() + "<br>");
+                    sb.append("<b>Classe du Controleur:</b> " + map.getControlleur() + "<br>");
+                    sb.append("<b>Methode Associee:</b> " + map.getMethode() + "<br>");
 
                 
                     Class<?> clazz = Class.forName(map.getControlleur());
@@ -145,9 +145,9 @@ public class FrontController extends HttpServlet {
                         if (!handleError.isEmpty()) {
                             String referer = request.getHeader("Referer");
                             if (referer != null) {
-                                request.setAttribute("error", handleError);
-                                
-                                
+                                request.setAttribute("error", copyMap(handleError));
+                                // handleError.clear();
+                                System.out.println("ATO EHHH");
                                 String relativePath = referer.replaceFirst(baseUrl, "");
                                 
                                 if (relativePath.isEmpty() || relativePath.equals("/")) {
@@ -170,7 +170,7 @@ public class FrontController extends HttpServlet {
                         }
                         response.setContentType("text/html;charset=UTF-8");
                         if (result instanceof String) {
-                           sb.append("<br>Resultat de l'invocation de methode : " + result);
+                            sb.append("<br>Resultat de l'invocation de methode : " + result);
                         } else if (result instanceof ModelAndView) {
                             
                             
@@ -264,5 +264,9 @@ public class FrontController extends HttpServlet {
                out.println(element.toString());
             }
         }
+    }
+
+    private Map<String, String> copyMap(Map<String, String> source) {
+        return new HashMap<>(source);
     }
 }
