@@ -79,9 +79,9 @@ public class FrontController extends HttpServlet {
             out.println("</head>");
             out.println("<body>");
             out.println("<p><b>URL:</b> " + requestURL + "</p>");
-            out.println("<p><b>Méthode HTTP:</b> " + requestMethod + "</p>");
+            out.println("<p><b>Methode HTTP:</b> " + requestMethod + "</p>");
 
-            out.println("<p><b>Contrôleurs Disponibles:</b></p>");
+            out.println("<p><b>Controleurs Disponibles:</b></p>");
             out.println("<ul>");
             for (String controller : controllerList) {
                 out.println("<li>" + controller + "</li>");
@@ -90,8 +90,8 @@ public class FrontController extends HttpServlet {
 
             String mappedURL = requestURL.replace(baseUrl, "");
             if (!urlMappings.containsKey(mappedURL)) {
-                out.println("L'URL demandée est introuvable.");
-                // response.sendError(HttpServletResponse.SC_NOT_FOUND, "L'URL demandée est introuvable.");
+                out.println("L'URL demandee est introuvable.");
+                // response.sendError(HttpServletResponse.SC_NOT_FOUND, "L'URL demandee est introuvable.");
                 return;
             }
             
@@ -102,8 +102,8 @@ public class FrontController extends HttpServlet {
                     if(!map.getVerbAction().testVerbAction(request.getMethod(), mappedURL)){
                         throw new Exception("Vous essayez d'utiliser une requette avec la methode "+request.getMethod()+" au lieu de "+map.getVerbAction().getVerb());
                     }
-                    out.println("<b>Classe du Contrôleur:</b> " + map.getControlleur() + "<br>");
-                    out.println("<b>Méthode Associée:</b> " + map.getMethode() + "<br>");
+                    out.println("<b>Classe du Controleur:</b> " + map.getControlleur() + "<br>");
+                    out.println("<b>Methode Associee:</b> " + map.getMethode() + "<br>");
 
                 
                     Class<?> clazz = Class.forName(map.getControlleur());
@@ -118,7 +118,7 @@ public class FrontController extends HttpServlet {
                     }
 
                     if (method == null) {
-                        throw new Exception("Méthode non trouvée : " + map.getMethode());
+                        throw new Exception("Methode non trouvee : " + map.getMethode());
                     }
 
                     try{
@@ -151,16 +151,16 @@ public class FrontController extends HttpServlet {
                         }
                         response.setContentType("text/html;charset=UTF-8");
                         if (result instanceof String) {
-                            out.println("<br>Résultat de l'invocation de méthode : " + result);
+                            out.println("<br>Resultat de l'invocation de methode : " + result);
                         } else if (result instanceof ModelAndView) {
                             
                             
                             ModelAndView modelAndView = (ModelAndView) result;
                             if(method.isAnnotationPresent(RestApi.class)){
                                 response.setContentType("application/json;charset=UTF-8");
-                                PrintWriter out1=response.getWriter();
-                                out1.println(gson.toJson(modelAndView.getData()));
-                                out1.close();
+                                out.flush();
+                                out.println(gson.toJson(modelAndView.getData()));
+                                
                                 return;
                             }
                             for (String key : modelAndView.getData().keySet()) {
@@ -194,7 +194,7 @@ public class FrontController extends HttpServlet {
                     e.printStackTrace();
                 }
             } else {
-                out.println("<p class='error-message' >Aucune méthode associée à cet URL.</p>");
+                out.println("<p class='error-message' >Aucune methode associee à cet URL.</p>");
             }
 
             out.println("</body>");
