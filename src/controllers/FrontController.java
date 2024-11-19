@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,6 +28,7 @@ import java.util.HashMap;
 
 
 @MultipartConfig
+@WebServlet(urlPatterns = "/")
 public class FrontController extends HttpServlet {
     private List<String> controllerList = new ArrayList<>();
     private Map<String, Mapping> urlMappings = new HashMap<>();
@@ -88,7 +90,8 @@ public class FrontController extends HttpServlet {
 
             String mappedURL = requestURL.replace(baseUrl, "");
             if (!urlMappings.containsKey(mappedURL)) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "L'URL demandée est introuvable.");
+                out.println("L'URL demandée est introuvable.");
+                // response.sendError(HttpServletResponse.SC_NOT_FOUND, "L'URL demandée est introuvable.");
                 return;
             }
             
@@ -155,9 +158,9 @@ public class FrontController extends HttpServlet {
                             ModelAndView modelAndView = (ModelAndView) result;
                             if(method.isAnnotationPresent(RestApi.class)){
                                 response.setContentType("application/json;charset=UTF-8");
-                                
-                                out.println(gson.toJson(modelAndView.getData()));
-                                
+                                PrintWriter out1=response.getWriter();
+                                out1.println(gson.toJson(modelAndView.getData()));
+                                out1.close();
                                 return;
                             }
                             for (String key : modelAndView.getData().keySet()) {
