@@ -43,7 +43,7 @@ public class FrontController extends HttpServlet {
                     ControllerScan controllerScan=new ControllerScan(urlMappings, controllerList, getServletContext(), request);
                     controllerScan.initControllers();
                     initialized = true;
-                } catch (Exception e) {
+                } catch (Exception e) {  
                     try (PrintWriter out = response.getWriter()) {
                         out.println("Initialization error: " + e.getMessage());
                     }
