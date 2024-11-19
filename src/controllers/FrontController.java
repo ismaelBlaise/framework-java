@@ -54,14 +54,7 @@ public class FrontController extends HttpServlet {
             }
         }
 
-        String isRedirect = request.getParameter("redirect");
-        if (isRedirect!=null && "true".equals(isRedirect)) {
-            String referer = request.getHeader("Referer");
-            if (referer != null) {
-                request.getRequestDispatcher(referer).forward(request, response);
-            }
-            return;
-        }
+        
         try (PrintWriter out = response.getWriter()) {
             StringBuilder sb=new StringBuilder();
             
@@ -97,7 +90,7 @@ public class FrontController extends HttpServlet {
                sb.append("<li>" + controller + "</li>");
             }
            sb.append("</ul>");
-            
+           handleError=new HashMap<>();
             String mappedURL = requestURL.replace(baseUrl, "");
             if (!urlMappings.containsKey(mappedURL)) {
             //    sb.append("L'URL demandee est introuvable.");
@@ -107,7 +100,7 @@ public class FrontController extends HttpServlet {
             
             if (urlMappings.containsKey(mappedURL)) {
                 try {
-                
+                    
                     Mapping map = urlMappings.get(mappedURL);
                     if(!map.getVerbAction().testVerbAction(request.getMethod(), mappedURL)){
                         throw new Exception("Vous essayez d'utiliser une requette avec la methode "+request.getMethod()+" au lieu de "+map.getVerbAction().getVerb());
@@ -140,7 +133,10 @@ public class FrontController extends HttpServlet {
                                 field.set(controllerInstance, new CustomSession());
                             }
                         }
-                        handleError=new HashMap<>();
+                        
+                        
+
+
                         MethodScan methodScan=new MethodScan(handleError,method, request);
 
                         Object[] methodParam=methodScan.getMethodParameters();
@@ -149,15 +145,23 @@ public class FrontController extends HttpServlet {
                         if (!handleError.isEmpty()) {
                             String referer = request.getHeader("Referer");
                             if (referer != null) {
-                                 
                                 request.setAttribute("error", handleError);
-
-                                String redirectUrl = referer + (referer.contains("?") ? "&" : "?") + "redirect=true";
-                                response.sendRedirect(redirectUrl);
+                                
+                                
+                                String relativePath = referer.replaceFirst(baseUrl, "");
+                                
+                                if (relativePath.isEmpty() || relativePath.equals("/")) {
+                                    
+                                    request.getRequestDispatcher("/index.jsp").forward(request, response);
+                                } else {
+                                     
+                                    request.getRequestDispatcher("/" + relativePath).forward(request, response);
+                                }
                                 return;
                             }
+                            
                         }
-
+                        handleError=new HashMap<>();
                         
                         for(Object param: methodParam){
                             if(param instanceof CustomSession){

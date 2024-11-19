@@ -107,7 +107,7 @@ public class MethodScan {
 
     private void validateField(Field field, String objectName, String fieldName, String value) throws Exception {
         if (field.isAnnotationPresent(Required.class) && (value == null || value.isEmpty())) {
-            System.out.println("\n"+ field.getAnnotation(Required.class).message());
+            // System.out.println("\n"+ field.getAnnotation(Required.class).message());
             handleError.put(objectName + "." + fieldName, value);
             handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(Required.class).message());
         }
