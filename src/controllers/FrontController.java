@@ -54,6 +54,14 @@ public class FrontController extends HttpServlet {
             }
         }
 
+        String isRedirect = request.getParameter("redirect");
+        if (isRedirect!=null && "true".equals(isRedirect)) {
+            String referer = request.getHeader("Referer");
+            if (referer != null) {
+                request.getRequestDispatcher(referer).forward(request, response);
+            }
+            return;
+        }
         try (PrintWriter out = response.getWriter()) {
             StringBuilder sb=new StringBuilder();
             
@@ -89,7 +97,7 @@ public class FrontController extends HttpServlet {
                sb.append("<li>" + controller + "</li>");
             }
            sb.append("</ul>");
-
+            
             String mappedURL = requestURL.replace(baseUrl, "");
             if (!urlMappings.containsKey(mappedURL)) {
             //    sb.append("L'URL demandee est introuvable.");
@@ -138,19 +146,19 @@ public class FrontController extends HttpServlet {
                         Object[] methodParam=methodScan.getMethodParameters();
                         Object result = method.invoke(controllerInstance,methodParam );
 
-                        if(!handleError.isEmpty()){
-                        
+                        if (!handleError.isEmpty()) {
                             String referer = request.getHeader("Referer");
-                            System.out.println(referer);
-                            if(referer!=null){
-                                
-                                request.setAttribute("error",handleError);
-                                request.getRequestDispatcher(referer).forward(request, response);
-                                return ;
+                            if (referer != null) {
+                                 
+                                request.setAttribute("error", handleError);
+
+                                String redirectUrl = referer + (referer.contains("?") ? "&" : "?") + "redirect=true";
+                                response.sendRedirect(redirectUrl);
+                                return;
                             }
                         }
 
-
+                        
                         for(Object param: methodParam){
                             if(param instanceof CustomSession){
                                 SessionScan.synchronizeSession(request.getSession(),(CustomSession) param);
