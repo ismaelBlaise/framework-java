@@ -158,10 +158,10 @@ public class FrontController extends HttpServlet {
                                     
                                     String relativePath = referer.replaceFirst(baseUrl, "");
                                     if (relativePath.isEmpty() || relativePath.equals("/")) {
-                                        response.sendRedirect("/index.jp");
+                                        response.sendRedirect(request.getContextPath()+"/index.jp");
                                         
                                     } else {
-                                        response.sendRedirect("/" + relativePath);
+                                        response.sendRedirect(request.getContextPath()+"/" + relativePath);
                                         
                                     }
                                 } else {
