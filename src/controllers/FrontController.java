@@ -143,24 +143,26 @@ public class FrontController extends HttpServlet {
 
                         Object[] methodParam=methodScan.getMethodParameters();
                         Object result = method.invoke(controllerInstance,methodParam );
-                        if(request.getAttribute("error")!=null){
-                            request.removeAttribute("error");
+                        if (request.getSession().getAttribute("error")!=null) {
+                            request.getSession().removeAttribute("error");
                         }
                         if (!handleError.isEmpty()) {
                             
                             if (referer != null) {
                                 // Vérifier si l'erreur a déjà été traitée
                                 if (request.getAttribute("error_handled") == null) {
-                                    request.setAttribute("error", copyMap(handleError));
+                                    request.getSession().setAttribute("error", copyMap(handleError));
                                     handleError.clear();
                                     request.setAttribute("error_handled", true); // Marquer comme traité
                                     System.out.println(referer);
                                     
                                     String relativePath = referer.replaceFirst(baseUrl, "");
                                     if (relativePath.isEmpty() || relativePath.equals("/")) {
-                                        request.getRequestDispatcher("/index.jsp").forward(request, response);
+                                        response.sendRedirect("/index.jp");
+                                        
                                     } else {
-                                        request.getRequestDispatcher("/" + relativePath).forward(request, response);
+                                        response.sendRedirect("/" + relativePath);
+                                        
                                     }
                                 } else {
                                     System.out.println("Erreur déjà traitée, évitement de boucle.");
