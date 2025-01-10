@@ -145,22 +145,25 @@ public class FrontController extends HttpServlet {
                         if (!handleError.isEmpty()) {
                             String referer = request.getHeader("Referer");
                             if (referer != null) {
-                                request.setAttribute("error", copyMap(handleError));
-                                // handleError.clear();
-                                System.out.println("ATO EHHH");
-                                String relativePath = referer.replaceFirst(baseUrl, "");
-                                
-                                if (relativePath.isEmpty() || relativePath.equals("/")) {
+                                // Vérifier si l'erreur a déjà été traitée
+                                if (request.getAttribute("error_handled") == null) {
+                                    request.setAttribute("error", copyMap(handleError));
+                                    request.setAttribute("error_handled", true); // Marquer comme traité
+                                    System.out.println("ATO EHHH");
                                     
-                                    request.getRequestDispatcher("/index.jsp").forward(request, response);
+                                    String relativePath = referer.replaceFirst(baseUrl, "");
+                                    if (relativePath.isEmpty() || relativePath.equals("/")) {
+                                        request.getRequestDispatcher("/index.jsp").forward(request, response);
+                                    } else {
+                                        request.getRequestDispatcher("/" + relativePath).forward(request, response);
+                                    }
                                 } else {
-                                     
-                                    request.getRequestDispatcher("/" + relativePath).forward(request, response);
+                                    System.out.println("Erreur déjà traitée, évitement de boucle.");
                                 }
                                 return;
                             }
-                            
                         }
+                        
                         handleError=new HashMap<>();
                         
                         for(Object param: methodParam){
