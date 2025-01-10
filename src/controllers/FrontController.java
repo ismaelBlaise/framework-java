@@ -35,6 +35,8 @@ public class FrontController extends HttpServlet {
     private Map<String, String> handleError = new HashMap<>();
     private boolean initialized = false;
     private Gson gson=new Gson();
+    private String referer=null;
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
@@ -100,7 +102,7 @@ public class FrontController extends HttpServlet {
             
             if (urlMappings.containsKey(mappedURL)) {
                 try {
-                    
+                    referer = request.getHeader("Referer");
                     Mapping map = urlMappings.get(mappedURL);
                     if(!map.getVerbAction().testVerbAction(request.getMethod(), mappedURL)){
                         throw new Exception("Vous essayez d'utiliser une requette avec la methode "+request.getMethod()+" au lieu de "+map.getVerbAction().getVerb());
@@ -141,15 +143,18 @@ public class FrontController extends HttpServlet {
 
                         Object[] methodParam=methodScan.getMethodParameters();
                         Object result = method.invoke(controllerInstance,methodParam );
-
+                        if(request.getAttribute("error")!=null){
+                            request.removeAttribute("error");
+                        }
                         if (!handleError.isEmpty()) {
-                            String referer = request.getHeader("Referer");
+                            
                             if (referer != null) {
                                 // Vérifier si l'erreur a déjà été traitée
                                 if (request.getAttribute("error_handled") == null) {
                                     request.setAttribute("error", copyMap(handleError));
+                                    handleError.clear();
                                     request.setAttribute("error_handled", true); // Marquer comme traité
-                                    System.out.println("ATO EHHH");
+                                    System.out.println(referer);
                                     
                                     String relativePath = referer.replaceFirst(baseUrl, "");
                                     if (relativePath.isEmpty() || relativePath.equals("/")) {
