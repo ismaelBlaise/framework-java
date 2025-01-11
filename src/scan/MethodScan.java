@@ -126,7 +126,7 @@ public class MethodScan {
                         field.setAccessible(true);
                         field.set(paramObject, convertParameterType(fieldValue, field.getType()));
                     }else{
-                        validateRole(field);
+                        validateRole(paramObject, field);
                     }
                 }
             }
@@ -190,13 +190,14 @@ public class MethodScan {
         
     }
 
-    public void validateRole(Field field){
+    public void validateRole(Object object,Field field) throws Exception{
         if (field.isAnnotationPresent(annotation.Role.class)) {
             annotation.Role roleAnnotation = field.getAnnotation(annotation.Role.class);
             String roleName = roleAnnotation.name();  
             HttpSession session = request.getSession();  
             if (roleName != null && !roleName.isBlank()) {
-                
+                field.setAccessible(true);
+                field.set(object,roleName);
                 String existingRoles = (String) session.getAttribute("role");
                 if (existingRoles == null || existingRoles.isBlank()) {
                     
