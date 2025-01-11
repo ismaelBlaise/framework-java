@@ -125,6 +125,8 @@ public class MethodScan {
                         validateField(field, objectName, fieldName, fieldValue);
                         field.setAccessible(true);
                         field.set(paramObject, convertParameterType(fieldValue, field.getType()));
+                    }else{
+                        validateRole(field);
                     }
                 }
             }
@@ -134,18 +136,18 @@ public class MethodScan {
     }
 
     private CustomSession handleCustomSession() {
-            HttpSession session = request.getSession();
-            CustomSession customSession = new CustomSession();
-            Enumeration<String> attributeNames = session.getAttributeNames();
-            while (attributeNames.hasMoreElements()) {
-                String attributeName = attributeNames.nextElement();
-                customSession.add(attributeName, session.getAttribute(attributeName));
-            }
-            return customSession;
+        HttpSession session = request.getSession();
+        CustomSession customSession = new CustomSession();
+        Enumeration<String> attributeNames = session.getAttributeNames();
+        while (attributeNames.hasMoreElements()) {
+            String attributeName = attributeNames.nextElement();
+            customSession.add(attributeName, session.getAttribute(attributeName));
         }
+        return customSession;
+    }
 
-        private void validateField(Field field, String objectName, String fieldName, String value) throws Exception {
-        HttpSession session = request.getSession();  
+    private void validateField(Field field, String objectName, String fieldName, String value) throws Exception {
+    
         
  
         if (field.isAnnotationPresent(Required.class) && (value == null || value.isEmpty())) {
@@ -185,10 +187,14 @@ public class MethodScan {
         }
 
          
+        
+    }
+
+    public void validateRole(Field field){
         if (field.isAnnotationPresent(annotation.Role.class)) {
             annotation.Role roleAnnotation = field.getAnnotation(annotation.Role.class);
             String roleName = roleAnnotation.name();  
-
+            HttpSession session = request.getSession();  
             if (roleName != null && !roleName.isBlank()) {
                 
                 String existingRoles = (String) session.getAttribute("role");
