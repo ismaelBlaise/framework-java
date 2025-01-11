@@ -65,7 +65,8 @@ public class FrontController extends HttpServlet {
             String baseUrl = getBaseUrl(request);
 
             sb.append("<!DOCTYPE html>");
-            sb.append("<html>");
+            sb.append("<html lang='fr'>");
+            sb.append("<meta charset=\"UTF-8\">");
             sb.append("<head>");
             sb.append("<title>FrontController</title>");
             sb.append("<style>.error-message {\n" + //
@@ -140,7 +141,7 @@ public class FrontController extends HttpServlet {
 
 
                         MethodScan methodScan=new MethodScan(handleError,method, request);
-
+                        methodScan.authentification();
                         Object[] methodParam=methodScan.getMethodParameters();
                         Object result = method.invoke(controllerInstance,methodParam );
                         if (request.getSession().getAttribute("error")!=null) {
