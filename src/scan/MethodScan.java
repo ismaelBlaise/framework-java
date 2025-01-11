@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.Map;
 
+import annotation.Authentification;
 import annotation.DateFormat;
 import annotation.FieldAnnotation;
 import annotation.Numeric;
@@ -35,6 +36,27 @@ public class MethodScan {
         this.method = method;
         this.request = request;
     }
+
+    public void authentification() throws Exception {
+        if (method.isAnnotationPresent(Authentification.class)) {
+            Authentification auth = method.getAnnotation(Authentification.class);
+            HttpSession session = request.getSession(false);
+            if (session != null && Boolean.TRUE.equals(session.getAttribute("authenticated"))) {
+                String role = (String) session.getAttribute("role");
+                if(!auth.name().isBlank()){
+
+                }
+                else{
+                    return;
+                }
+            } else {
+                throw new Exception("")
+            }
+            
+            
+        }
+    }
+
 
     public Object[] getMethodParameters() throws Exception {
         Parameter[] parameters = method.getParameters();
