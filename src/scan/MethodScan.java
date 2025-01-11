@@ -7,7 +7,10 @@ import java.lang.reflect.Parameter;
 import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 
 import annotation.Authentification;
@@ -41,21 +44,33 @@ public class MethodScan {
         if (method.isAnnotationPresent(Authentification.class)) {
             Authentification auth = method.getAnnotation(Authentification.class);
             HttpSession session = request.getSession(false);
-            if (session != null && Boolean.TRUE.equals(session.getAttribute("authenticated"))) {
-                String role = (String) session.getAttribute("role");
-                if(!auth.name().isBlank()){
 
+            if (session != null && Boolean.TRUE.equals(session.getAttribute("authenticated"))) {
+                String rolesInSession = (String) session.getAttribute("role"); 
+                if (rolesInSession != null && !rolesInSession.isBlank()) {
+                    
+                    List<String> userRoles = Arrays.asList(rolesInSession.split(","));
+
+                     
+                    if (!auth.name().isBlank()) {
+                        String[] authorizedRoles = auth.name().split(",");
+                        boolean isAuthorized = Arrays.stream(authorizedRoles)
+                                                    .map(String::trim)
+                                                    .anyMatch(userRoles::contains);
+
+                        if (!isAuthorized) {
+                            throw new Exception("Accès interdit : rôle insuffisant pour accéder à cette méthode.");
+                        }
+                    }
+                    return;  
                 }
-                else{
-                    return;
-                }
+                throw new Exception("Accès interdit : aucun rôle défini dans la session.");
             } else {
-                throw new Exception("")
+                throw new Exception("Accès interdit : l'utilisateur n'est pas authentifié.");
             }
-            
-            
         }
     }
+
 
 
     public Object[] getMethodParameters() throws Exception {
@@ -119,21 +134,25 @@ public class MethodScan {
     }
 
     private CustomSession handleCustomSession() {
-        HttpSession session = request.getSession();
-        CustomSession customSession = new CustomSession();
-        Enumeration<String> attributeNames = session.getAttributeNames();
-        while (attributeNames.hasMoreElements()) {
-            String attributeName = attributeNames.nextElement();
-            customSession.add(attributeName, session.getAttribute(attributeName));
+            HttpSession session = request.getSession();
+            CustomSession customSession = new CustomSession();
+            Enumeration<String> attributeNames = session.getAttributeNames();
+            while (attributeNames.hasMoreElements()) {
+                String attributeName = attributeNames.nextElement();
+                customSession.add(attributeName, session.getAttribute(attributeName));
+            }
+            return customSession;
         }
-        return customSession;
-    }
 
-    private void validateField(Field field, String objectName, String fieldName, String value) throws Exception {
+        private void validateField(Field field, String objectName, String fieldName, String value) throws Exception {
+        HttpSession session = request.getSession();  
+        
+ 
         if (field.isAnnotationPresent(Required.class) && (value == null || value.isEmpty())) {
             addError(objectName, fieldName, field.getAnnotation(Required.class).message(), value);
         }
-    
+
+         
         if (field.isAnnotationPresent(Numeric.class)) {
             try {
                 Double.parseDouble(value);
@@ -141,7 +160,8 @@ public class MethodScan {
                 addError(objectName, fieldName, field.getAnnotation(Numeric.class).message(), value);
             }
         }
-    
+
+        
         if (field.isAnnotationPresent(annotation.DateFormat.class)) {
             annotation.DateFormat dateFormat = field.getAnnotation(annotation.DateFormat.class);
             try {
@@ -150,7 +170,8 @@ public class MethodScan {
                 addError(objectName, fieldName, field.getAnnotation(DateFormat.class).message(), value);
             }
         }
-    
+
+         
         if (field.isAnnotationPresent(annotation.Range.class)) {
             annotation.Range range = field.getAnnotation(annotation.Range.class);
             try {
@@ -162,8 +183,35 @@ public class MethodScan {
                 addError(objectName, fieldName, "La valeur doit être un nombre pour vérifier la plage.", value);
             }
         }
+
+         
+        if (field.isAnnotationPresent(annotation.Role.class)) {
+            annotation.Role roleAnnotation = field.getAnnotation(annotation.Role.class);
+            String roleName = roleAnnotation.name();  
+
+            if (roleName != null && !roleName.isBlank()) {
+                
+                String existingRoles = (String) session.getAttribute("role");
+                if (existingRoles == null || existingRoles.isBlank()) {
+                    
+                    session.setAttribute("role", roleName);
+                } else {
+                    
+                    List<String> roleList = new ArrayList<>(Arrays.asList(existingRoles.split(",")));
+                    if (!roleList.contains(roleName)) {
+                        roleList.add(roleName);
+                        session.setAttribute("role", String.join(",", roleList));
+                    }
+                }
+            }
+
+            
+            session.setAttribute("authenticated", true);
+        }
     }
+
     
+
     
     private void addError(String objectName, String fieldName, String message, String value) {
         String key = objectName + "." + fieldName;
