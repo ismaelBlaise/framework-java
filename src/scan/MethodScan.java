@@ -227,14 +227,21 @@ public class MethodScan {
         
         handleError.put(key, value);
     
-        
+         
         if (handleError.containsKey(errorKey)) {
             String existingMessage = handleError.get(errorKey);
-            handleError.replace(errorKey, existingMessage + "," + message);
+            
+             
+            if (!existingMessage.contains(message)) {
+                handleError.replace(errorKey, existingMessage + "," + message);
+            }
+             
         } else {
+            
             handleError.put(errorKey, message);
         }
     }
+    
     
 
     @SuppressWarnings({"rawtypes", "unchecked"})
