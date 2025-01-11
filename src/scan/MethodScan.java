@@ -109,64 +109,56 @@ public class MethodScan {
 
     private void validateField(Field field, String objectName, String fieldName, String value) throws Exception {
         if (field.isAnnotationPresent(Required.class) && (value == null || value.isEmpty())) {
-            // System.out.println("\n"+ field.getAnnotation(Required.class).message());
-            handleError.put(objectName + "." + fieldName, value);
-            if(handleError.containsKey(objectName + "." + fieldName + ".err")){
-                handleError.replace(objectName + "." + fieldName + ".err",handleError.get(objectName + "." + fieldName + ".err") +","+field.getAnnotation(Required.class).message());
-            }
-            else{
-                handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(Required.class).message());
-            }
+            addError(objectName, fieldName, field.getAnnotation(Required.class).message(), value);
         }
-
+    
         if (field.isAnnotationPresent(Numeric.class)) {
             try {
                 Double.parseDouble(value);
             } catch (NumberFormatException e) {
-                handleError.put(objectName + "." + fieldName, value);
-                if(handleError.containsKey(objectName + "." + fieldName + ".err")){
-                    handleError.replace(objectName + "." + fieldName + ".err",handleError.get(objectName + "." + fieldName + ".err") +","+field.getAnnotation(Numeric.class).message());
-                }
-                else{
-                    handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(Numeric.class).message());
-                }
+                addError(objectName, fieldName, field.getAnnotation(Numeric.class).message(), value);
             }
         }
-
+    
         if (field.isAnnotationPresent(annotation.DateFormat.class)) {
             annotation.DateFormat dateFormat = field.getAnnotation(annotation.DateFormat.class);
             try {
                 new SimpleDateFormat(dateFormat.format()).parse(value);
             } catch (ParseException e) {
-                handleError.put(objectName + "." + fieldName, value);
-                if(handleError.containsKey(objectName + "." + fieldName + ".err")){
-                    handleError.replace(objectName + "." + fieldName + ".err",handleError.get(objectName + "." + fieldName + ".err") +","+field.getAnnotation(DateFormat.class).message());
-                }
-                else{
-                    handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(DateFormat.class).message());
-                }
+                addError(objectName, fieldName, field.getAnnotation(DateFormat.class).message(), value);
             }
         }
-
+    
         if (field.isAnnotationPresent(annotation.Range.class)) {
             annotation.Range range = field.getAnnotation(annotation.Range.class);
             try {
                 double numericValue = Double.parseDouble(value);
                 if (numericValue < range.min() || numericValue > range.max()) {
-                    handleError.put(objectName + "." + fieldName, value);
-                    if(handleError.containsKey(objectName + "." + fieldName + ".err")){
-                        handleError.replace(objectName + "." + fieldName + ".err",handleError.get(objectName + "." + fieldName + ".err") +","+field.getAnnotation(Range.class).message());
-                    }
-                    else{
-                        handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(Range.class).message());
-                    }
+                    addError(objectName, fieldName, field.getAnnotation(Range.class).message(), value);
                 }
             } catch (NumberFormatException e) {
-                handleError.put(objectName + "." + fieldName, value);
-                handleError.put(objectName + "." + fieldName + ".err", "La valeur doit être un nombre pour verifier la plage.");
+                addError(objectName, fieldName, "La valeur doit être un nombre pour vérifier la plage.", value);
             }
         }
     }
+    
+    
+    private void addError(String objectName, String fieldName, String message, String value) {
+        String key = objectName + "." + fieldName;
+        String errorKey = key + ".err";
+    
+        
+        handleError.put(key, value);
+    
+        
+        if (handleError.containsKey(errorKey)) {
+            String existingMessage = handleError.get(errorKey);
+            handleError.replace(errorKey, existingMessage + "," + message);
+        } else {
+            handleError.put(errorKey, message);
+        }
+    }
+    
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private Object convertParameterType(String paramValue, Class<?> paramType) throws Exception {
