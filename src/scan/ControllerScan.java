@@ -127,4 +127,6 @@ public class ControllerScan {
             throw new Exception("Les méthodes doivent retourner soit String soit ModelAndView.");
         }
     }
+
+
 }
