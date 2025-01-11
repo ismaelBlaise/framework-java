@@ -10,10 +10,12 @@ import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.Map;
 
+import annotation.DateFormat;
 import annotation.FieldAnnotation;
 import annotation.Numeric;
 import annotation.Param;
 import annotation.ParamObject;
+import annotation.Range;
 import annotation.Required;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -109,7 +111,12 @@ public class MethodScan {
         if (field.isAnnotationPresent(Required.class) && (value == null || value.isEmpty())) {
             // System.out.println("\n"+ field.getAnnotation(Required.class).message());
             handleError.put(objectName + "." + fieldName, value);
-            handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(Required.class).message());
+            if(handleError.containsKey(objectName + "." + fieldName + ".err")){
+                handleError.replace(objectName + "." + fieldName + ".err",handleError.get(objectName + "." + fieldName + ".err") +","+field.getAnnotation(Required.class).message());
+            }
+            else{
+                handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(Required.class).message());
+            }
         }
 
         if (field.isAnnotationPresent(Numeric.class)) {
@@ -117,7 +124,12 @@ public class MethodScan {
                 Double.parseDouble(value);
             } catch (NumberFormatException e) {
                 handleError.put(objectName + "." + fieldName, value);
-                handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(Numeric.class).message());
+                if(handleError.containsKey(objectName + "." + fieldName + ".err")){
+                    handleError.replace(objectName + "." + fieldName + ".err",handleError.get(objectName + "." + fieldName + ".err") +","+field.getAnnotation(Numeric.class).message());
+                }
+                else{
+                    handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(Numeric.class).message());
+                }
             }
         }
 
@@ -127,7 +139,12 @@ public class MethodScan {
                 new SimpleDateFormat(dateFormat.format()).parse(value);
             } catch (ParseException e) {
                 handleError.put(objectName + "." + fieldName, value);
-                handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(annotation.DateFormat.class).message());
+                if(handleError.containsKey(objectName + "." + fieldName + ".err")){
+                    handleError.replace(objectName + "." + fieldName + ".err",handleError.get(objectName + "." + fieldName + ".err") +","+field.getAnnotation(DateFormat.class).message());
+                }
+                else{
+                    handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(DateFormat.class).message());
+                }
             }
         }
 
@@ -137,7 +154,12 @@ public class MethodScan {
                 double numericValue = Double.parseDouble(value);
                 if (numericValue < range.min() || numericValue > range.max()) {
                     handleError.put(objectName + "." + fieldName, value);
-                    handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(annotation.Range.class).message());
+                    if(handleError.containsKey(objectName + "." + fieldName + ".err")){
+                        handleError.replace(objectName + "." + fieldName + ".err",handleError.get(objectName + "." + fieldName + ".err") +","+field.getAnnotation(Range.class).message());
+                    }
+                    else{
+                        handleError.put(objectName + "." + fieldName + ".err", field.getAnnotation(Range.class).message());
+                    }
                 }
             } catch (NumberFormatException e) {
                 handleError.put(objectName + "." + fieldName, value);
