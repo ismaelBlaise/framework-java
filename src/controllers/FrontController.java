@@ -104,9 +104,9 @@ public class FrontController extends HttpServlet {
                 try {
                     referer = request.getHeader("Referer");
                     Mapping map = urlMappings.get(mappedURL);
-                    if(!map.getVerbAction().testVerbAction(request.getMethod(), mappedURL)){
-                        throw new Exception("Vous essayez d'utiliser une requette avec la methode "+request.getMethod()+" au lieu de "+map.getVerbAction().getVerb());
-                    }
+                    // if(!map.getVerbAction().testVerbAction(request.getMethod(), mappedURL)){
+                    //     throw new Exception("Vous essayez d'utiliser une requette avec la methode "+request.getMethod()+" au lieu de "+map.getVerbAction().getVerb());
+                    // }
                     sb.append("<b>Classe du Controleur:</b> " + map.getControlleur() + "<br>");
                     sb.append("<b>Methode Associee:</b> " + map.getMethode() + "<br>");
 
@@ -198,7 +198,16 @@ public class FrontController extends HttpServlet {
                             for (String key : modelAndView.getData().keySet()) {
                                 request.setAttribute(key, modelAndView.getData().get(key));
                             }
-                            request.getRequestDispatcher(modelAndView.getUrl()).forward(request, response);
+
+                            if(modelAndView.getUrl().startsWith("redirect:")){
+                                String[] urlTab=modelAndView.getUrl().split(":");
+
+                                response.sendRedirect(getBaseUrl(request)+"/"+urlTab[1]);
+                            }
+                            if(!modelAndView.getUrl().startsWith("redirect:")){
+                                request.getRequestDispatcher(modelAndView.getUrl()).forward(request, response);
+                            }
+                            
                             return;
                         }
                         else{
