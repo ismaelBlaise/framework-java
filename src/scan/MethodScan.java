@@ -24,6 +24,7 @@ import annotation.Required;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
+import java.io.File;
 import util.CustomPart;
 import util.CustomSession;
 
@@ -100,6 +101,7 @@ public class MethodScan {
         }
         return paramValues;
     }
+    
     
     private Object handleObjectParam(Class<?> paramType, ParamObject objectParam) throws Exception {
         Object paramObject = paramType.getDeclaredConstructor().newInstance();
