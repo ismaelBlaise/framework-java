@@ -2,10 +2,10 @@
 
 REM Déclaration des variables
     set nom_projet=framework-java
-    set temp="C:\Users\Blaise Ismael ANDRIANAIVO\Documents\GitHub\"%nom_projet%
-    set lib="C:\Users\Blaise Ismael ANDRIANAIVO\Documents\GitHub\test\lib"
-    set lib-framework="C:\Users\Blaise Ismael ANDRIANAIVO\Documents\GitHub\framework-java\lib"
-    set src="C:\Users\Blaise Ismael ANDRIANAIVO\Documents\GitHub\framework-java\src"
+    set temp="C:\Users\ismael\Documents\GitHub\"%nom_projet%
+    set lib="C:\Users\ismael\Documents\GitHub\test\lib"
+    set lib-framework="C:\Users\ismael\Documents\GitHub\framework-java\lib"
+    set src="C:\Users\ismael\Documents\GitHub\framework-java\src"
 
 REM Compilation des fichiers Java dans des packages
     for /r %src% %%i in (*.java) do (

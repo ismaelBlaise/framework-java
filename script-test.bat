@@ -2,12 +2,12 @@
 
 REM Déclaration des variables
     set nom_projet=test-framework
-    set temp="C:\Users\Blaise Ismael ANDRIANAIVO\Documents\GitHub\test\temp"
-    set web="C:\Users\Blaise Ismael ANDRIANAIVO\Documents\GitHub\test\web"
-    set xml="C:\Users\Blaise Ismael ANDRIANAIVO\Documents\GitHub\test\xml"
-    set lib="C:\Users\Blaise Ismael ANDRIANAIVO\Documents\GitHub\test\lib"
-    set war="C:\Users\Blaise Ismael ANDRIANAIVO\Documents\GitHub\test\"
-    set src="C:\Users\Blaise Ismael ANDRIANAIVO\Documents\GitHub\test\src"
+    set temp="C:\Users\ismael\Documents\GitHub\test\temp"
+    set web="C:\Users\ismael\Documents\GitHub\test\web"
+    set xml="C:\Users\ismael\Documents\GitHub\test\xml"
+    set lib="C:\Users\ismael\Documents\GitHub\test\lib"
+    set war="C:\Users\ismael\Documents\GitHub\test\"
+    set src="C:\Users\ismael\Documents\GitHub\test\src"
 
 REM Suppression de temp si il existe
     rmdir /s /q %temp%
