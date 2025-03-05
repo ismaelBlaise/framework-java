@@ -1,4 +1,4 @@
-package scan;
+package util;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.FileInputStream;
