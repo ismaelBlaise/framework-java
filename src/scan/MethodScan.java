@@ -44,7 +44,9 @@ public class MethodScan {
 
     public void authentification() throws Exception {
         HttpSession session = request.getSession(false);
-        
+        if(method.isAnnotationPresent(Authentification.class)==false){
+            return;
+        }
     
         String rolesInSession = (String) session.getAttribute("role");
         
@@ -224,7 +226,7 @@ public class MethodScan {
                 field.set(object,roleName);
                 String existingRoles = (String) session.getAttribute("role");
                 if (existingRoles == null || existingRoles.isBlank()) {
-                    
+                    System.out.println("iSMAAAA");
                     session.setAttribute("role", roleName);
                 } else {
                     
