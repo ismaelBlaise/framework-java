@@ -61,4 +61,20 @@ public class CustomPart {
                 ", bytesLength=" + (bytes != null ? bytes.length : 0) +
                 '}';
     }
+
+
+    public void regenerateFile(String destinationPath) throws IOException {
+        if (getBytes() == null || getFileName() == null) {
+            throw new IllegalArgumentException("Données du fichier invalides");
+        }
+
+        // Création du chemin complet du fichier
+        File file = new File(destinationPath + File.separator + getFileName());
+        
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(getBytes());
+            fos.flush();
+            System.out.println("Fichier régénéré avec succès : " + file.getAbsolutePath());
+        }
+    }
 }
