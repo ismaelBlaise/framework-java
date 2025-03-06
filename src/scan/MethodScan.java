@@ -38,6 +38,7 @@ public class MethodScan {
     // Constructor to initialize the required attributes
     public MethodScan(Map<String, String> handleError, Method method,Object object, HttpServletRequest request) {
         this.handleError = handleError;
+        this.objet=object;
         this.method = method;
         this.request = request;
     }
