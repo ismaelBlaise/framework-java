@@ -19,8 +19,10 @@ import annotation.FieldAnnotation;
 import annotation.Numeric;
 import annotation.Param;
 import annotation.ParamObject;
+import annotation.Public;
 import annotation.Range;
 import annotation.Required;
+import annotation.Role;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
@@ -29,48 +31,61 @@ import util.CustomPart;
 import util.CustomSession;
 
 public class MethodScan {
-
+    private Object objet;
     private Map<String, String> handleError;
     private Method method;
     private HttpServletRequest request;
 
     // Constructor to initialize the required attributes
-    public MethodScan(Map<String, String> handleError, Method method, HttpServletRequest request) {
+    public MethodScan(Map<String, String> handleError, Method method,Object object, HttpServletRequest request) {
         this.handleError = handleError;
         this.method = method;
         this.request = request;
     }
 
     public void authentification() throws Exception {
-        if (method.isAnnotationPresent(Authentification.class)) {
-            Authentification auth = method.getAnnotation(Authentification.class);
-            HttpSession session = request.getSession(false);
-
-            if (session != null && Boolean.TRUE.equals(session.getAttribute("authenticated"))) {
-                String rolesInSession = (String) session.getAttribute("role"); 
-                if (rolesInSession != null && !rolesInSession.isBlank()) {
-                    
-                    List<String> userRoles = Arrays.asList(rolesInSession.split(","));
-
-                     
-                    if (!auth.name().isBlank()) {
-                        String[] authorizedRoles = auth.name().split(",");
-                        boolean isAuthorized = Arrays.stream(authorizedRoles)
-                                                    .map(String::trim)
-                                                    .anyMatch(userRoles::contains);
-
-                        if (!isAuthorized) {
-                            throw new Exception("Accès interdit : rôle insuffisant pour accéder à cette méthode.");
-                        }
-                    }
-                    return;  
+        HttpSession session = request.getSession(false);
+        if (session == null || Boolean.FALSE.equals(session.getAttribute("authenticated"))) {
+            throw new Exception("Accès interdit : l'utilisateur n'est pas authentifié.");
+        }
+    
+        String rolesInSession = (String) session.getAttribute("role");
+        if (rolesInSession == null || rolesInSession.isBlank()) {
+            throw new Exception("Accès interdit : aucun rôle défini dans la session.");
+        }
+    
+        List<String> userRoles = Arrays.asList(rolesInSession.split(","));
+    
+        if (this.objet.getClass().isAnnotationPresent(Authentification.class)) {
+            Authentification classAuth = this.objet.getClass().getAnnotation(Authentification.class);
+            if (method.isAnnotationPresent(Public.class)) {
+                return;
+            }
+            if (!classAuth.name().isBlank()) {
+                String[] authorizedRoles = classAuth.name().split(",");
+                boolean isAuthorized = Arrays.stream(authorizedRoles)
+                                             .map(String::trim)
+                                             .anyMatch(userRoles::contains);
+                if (!isAuthorized) {
+                    throw new Exception("Accès interdit : rôle insuffisant pour accéder à cette classe.");
                 }
-                throw new Exception("Accès interdit : aucun rôle défini dans la session.");
-            } else {
-                throw new Exception("Accès interdit : l'utilisateur n'est pas authentifié.");
+            }
+        }
+    
+        if (method.isAnnotationPresent(Authentification.class)) {
+            Authentification methodAuth = method.getAnnotation(Authentification.class);
+            if (!methodAuth.name().isBlank()) {
+                String[] authorizedRoles = methodAuth.name().split(",");
+                boolean isAuthorized = Arrays.stream(authorizedRoles)
+                                             .map(String::trim)
+                                             .anyMatch(userRoles::contains);
+                if (!isAuthorized) {
+                    throw new Exception("Accès interdit : rôle insuffisant pour accéder à cette méthode.");
+                }
             }
         }
     }
+    
 
 
 
@@ -193,7 +208,7 @@ public class MethodScan {
     }
 
     public void validateRole(Object object,Field field) throws Exception{
-        if (field.isAnnotationPresent(annotation.Role.class)) {
+        if (field.isAnnotationPresent(Role.class)) {
             annotation.Role roleAnnotation = field.getAnnotation(annotation.Role.class);
             String roleName = roleAnnotation.name();  
             HttpSession session = request.getSession();  

@@ -1,9 +1,9 @@
 {
     "java.project.referencedLibraries": [
+        "lib\\gson-2.11.0.jar",
+        "lib\\postgresql-42.6.0.jar",
         "lib\\servlet-api.jar",
-        "c:\\Users\\WINDOWS 10\\Documents\\GitHub\\framework-java\\lib\\postgresql-42.6.0.jar",
-        "c:\\Users\\WINDOWS 10\\Documents\\GitHub\\framework-java\\lib\\servlet-api.jar",
-        "c:\\Users\\WINDOWS 10\\Documents\\GitHub\\framework-java\\lib\\gson-2.11.0.jar"
+        "c:\\Users\\ismael\\Documents\\GitHub\\framework-java\\lib\\servlet-api.jar"
     ],
     "java.project.sourcePaths": [
         "src"

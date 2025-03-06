@@ -140,7 +140,7 @@ public class FrontController extends HttpServlet {
                         
 
 
-                        MethodScan methodScan=new MethodScan(handleError,method, request);
+                        MethodScan methodScan=new MethodScan(handleError,method,controllerInstance, request);
                         methodScan.authentification();
                         Object[] methodParam=methodScan.getMethodParameters();
                         Object result = method.invoke(controllerInstance,methodParam );

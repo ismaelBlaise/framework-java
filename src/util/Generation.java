@@ -1,7 +1,6 @@
-package scan;
+package util;
 
 import annotation.*;
-import jakarta.persistence.*;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
