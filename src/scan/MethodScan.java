@@ -28,6 +28,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import util.CustomPart;
 import util.CustomSession;
+import util.DbUtil;
 
 public class MethodScan {
     private Object objet;
@@ -120,7 +121,10 @@ public class MethodScan {
                 paramValues[i] = handleObjectParam(parameters[i].getType(), objectParam);
             } else if (parameters[i].getType() == CustomSession.class) {
                 paramValues[i] = handleCustomSession();
-            } else {
+            } else if(parameters[i].getType() == DbUtil.class){
+                paramValues[i] = new DbUtil(request);
+            }
+            else {
                 throw new Exception("<b>ETU002391</b>  les parametres doivent etre annoter par @Param ou @ParamObject");
             }
         }
