@@ -1,11 +1,11 @@
 @echo off
 
 REM Déclaration des variables
-    set nom_projet=framework
-    set temp=C:\Users\ismab\OneDrive\Documents\GitHub\test\%nom_projet%
-    set lib=C:\Users\ismab\OneDrive\Documents\GitHub\test\lib
-    set lib-framework=C:\Users\ismab\OneDrive\Documents\GitHub\main\lib
-    set src=C:\Users\ismab\OneDrive\Documents\GitHub\main\src
+    set nom_projet=framework-java
+    set temp="C:\Users\ismael\Documents\GitHub\%nom_projet%"
+    set lib="C:\Users\ismael\Documents\GitHub\test\lib"
+    set lib-framework="C:\Users\ismael\Documents\GitHub\framework-java\lib"
+    set src="C:\Users\ismael\Documents\GitHub\framework-java\src"
 
 REM Compilation des fichiers Java dans des packages
     for /r %src% %%i in (*.java) do (
