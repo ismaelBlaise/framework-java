@@ -44,18 +44,20 @@ public class MethodScan {
 
     public void authentification() throws Exception {
         HttpSession session = request.getSession(false);
-        if (session == null || Boolean.FALSE.equals(session.getAttribute("authenticated"))) {
-            throw new Exception("Accès interdit : l'utilisateur n'est pas authentifié.");
-        }
+        
     
         String rolesInSession = (String) session.getAttribute("role");
-        if (rolesInSession == null || rolesInSession.isBlank()) {
-            throw new Exception("Accès interdit : aucun rôle défini dans la session.");
-        }
+        
     
         List<String> userRoles = Arrays.asList(rolesInSession.split(","));
     
         if (this.objet.getClass().isAnnotationPresent(Authentification.class)) {
+            if (session == null || Boolean.FALSE.equals(session.getAttribute("authenticated"))) {
+                throw new Exception("Accès interdit : l'utilisateur n'est pas authentifié.");
+            }
+            if (rolesInSession == null || rolesInSession.isBlank()) {
+                throw new Exception("Accès interdit : aucun rôle défini dans la session.");
+            }
             Authentification classAuth = this.objet.getClass().getAnnotation(Authentification.class);
             if (method.isAnnotationPresent(Public.class)) {
                 return;
@@ -72,6 +74,12 @@ public class MethodScan {
         }
     
         if (method.isAnnotationPresent(Authentification.class)) {
+            if (session == null || Boolean.FALSE.equals(session.getAttribute("authenticated"))) {
+                throw new Exception("Accès interdit : l'utilisateur n'est pas authentifié.");
+            }
+            if (rolesInSession == null || rolesInSession.isBlank()) {
+                throw new Exception("Accès interdit : aucun rôle défini dans la session.");
+            }
             Authentification methodAuth = method.getAnnotation(Authentification.class);
             if (!methodAuth.name().isBlank()) {
                 String[] authorizedRoles = methodAuth.name().split(",");
