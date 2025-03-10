@@ -28,7 +28,6 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import util.CustomPart;
 import util.CustomSession;
-import util.DbUtil;
 
 public class MethodScan {
     private Object objet;
