@@ -203,7 +203,7 @@ public class FrontController extends HttpServlet {
                             if(modelAndView.getUrl().startsWith("redirect:")){
                                 String[] urlTab=modelAndView.getUrl().split(":");
 
-                                response.sendRedirect(getBaseUrl(request)+"/"+urlTab[1]);
+                                response.sendRedirect(getBaseUrl(request)+""+urlTab[1]);
                             }
                             if(!modelAndView.getUrl().startsWith("redirect:")){
                                 request.getRequestDispatcher(modelAndView.getUrl()).forward(request, response);
