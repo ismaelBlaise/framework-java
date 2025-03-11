@@ -3,7 +3,7 @@
 REM Déclaration des variables
     set nom_projet=framework-java
     set temp="C:\Users\ismael\Documents\GitHub\%nom_projet%"
-    set lib="C:\Users\ismael\Documents\GitHub\test\lib"
+    set lib="C:\Users\ismael\Documents\GitHub\avion-framework-java\lib"
     set lib-framework="C:\Users\ismael\Documents\GitHub\framework-java\lib"
     set src="C:\Users\ismael\Documents\GitHub\framework-java\src"
 
