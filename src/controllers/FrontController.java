@@ -40,6 +40,15 @@ public class FrontController extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        String requestURI = request.getRequestURI();
+        String contextPath = request.getContextPath();
+
+        
+        String relativePathZ = requestURI.substring(contextPath.length() + 1);
+
+        if (relativePathZ.startsWith("assets/")) {
+            return;
+        }
 
         synchronized (this) {
             if (!initialized) {
