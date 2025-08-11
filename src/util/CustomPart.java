@@ -79,4 +79,12 @@ public class CustomPart {
             System.out.println("Fichier régénéré avec succès : " + file.getAbsolutePath());
         }
     }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public void setBytes(byte[] bytes) {
+        this.bytes = bytes;
+    }
 }
