@@ -1,6 +1,9 @@
 package controllers;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -47,8 +50,31 @@ public class FrontController extends HttpServlet {
         String relativePathZ = requestURI.substring(contextPath.length() + 1);
 
         if (relativePathZ.startsWith("assets/")) {
-            return;
+            String filePath = getServletContext().getRealPath("/") + relativePathZ;
+            File file = new File(filePath);
+
+            if (file.exists()) {
+                String mimeType = getServletContext().getMimeType(file.getName());
+                if (mimeType == null) {
+                    mimeType = "application/octet-stream";
+                }
+                response.setContentType(mimeType);
+                response.setContentLengthLong(file.length());
+
+                try (FileInputStream in = new FileInputStream(file);
+                    OutputStream out = response.getOutputStream()) {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, bytesRead);
+                    }
+                }
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            }
+            return;  
         }
+
 
         synchronized (this) {
             if (!initialized) {
